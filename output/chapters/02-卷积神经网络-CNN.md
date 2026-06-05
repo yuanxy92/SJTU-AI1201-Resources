@@ -203,13 +203,13 @@ RGB 图像有 3 个输入通道。多通道卷积中，一个完整卷积核需�
 
 页码：p14-p16
 
-卷积层的计算可以分成三件事：空间大小怎么变，通道数怎么变，参数量怎么算。
+卷积层的计算重点记三件事：空间大小怎么变，通道数怎么变，参数量怎么算。
 
 \begin{definitionbox}
 \textbf{卷积层输出形状：} 输入为 $H \times W \times C_{in}$，卷积核个数为 $C_{out}$ 时，输出形状为 $H_{out} \times W_{out} \times C_{out}$；输出通道数由卷积核个数决定。
 \end{definitionbox}
 
-### 输入、卷积核和输出的形状
+\textbf{输入、卷积核和输出的形状：}
 
 ```text
 输入：H x W x C_in
@@ -220,30 +220,18 @@ RGB 图像有 3 个输入通道。多通道卷积中，一个完整卷积核需�
 输出：H_out x W_out x C_out
 ```
 
-\newpage
+\textbf{符号含义：} `H, W` 是输入高和宽；`C_in` 是输入通道数；`K` 是卷积核大小，例如 `3 x 3` 卷积核中 `K = 3`；`C_out` 是卷积核个数，也就是输出通道数；`H_out, W_out` 是输出高和宽。
 
-其中：
-
-- `H, W`：输入图像或特征图的高和宽。
-- `C_in`：输入通道数。
-- `K`：卷积核大小，例如 `3 x 3` 卷积核中 `K = 3`。
-- `C_out`：卷积核个数，也就是输出通道数。
-- `H_out, W_out`：输出特征图的高和宽。
-
-### 输出空间尺寸公式
+\textbf{输出空间尺寸公式：}
 
 ```text
 H_out = floor((H + 2P - K) / S) + 1
 W_out = floor((W + 2P - K) / S) + 1
 ```
 
-其中：
+其中，`P` 是 padding 大小，`S` 是 stride 大小，`floor` 表示向下取整。
 
-- `P` 是 padding 大小。
-- `S` 是 stride 大小。
-- `floor` 表示向下取整。
-
-### padding 和 stride 的影响
+\textbf{padding、stride、卷积核大小的影响：}
 
 | 参数 | 增大后通常会怎样 | 直观理解 |
 | --- | --- | --- |
@@ -252,7 +240,7 @@ W_out = floor((W + 2P - K) / S) + 1
 | 卷积核大小 | 输出空间尺寸变小 | 窗口更大，可放置的位置更少 |
 | 卷积核个数 | 输出通道数变多 | 一个卷积核产生一个输出通道 |
 
-### 参数量计算
+\textbf{参数量计算：}
 
 卷积层通常有 bias。每个卷积核产生一个输出通道，因此每个输出通道对应 1 个 bias。
 
@@ -268,10 +256,8 @@ W_out = floor((W + 2P - K) / S) + 1
 \textbf{例子：} 输入通道数 $C_{in}=3$，卷积核大小 $K=5$，卷积核个数 $C_{out}=6$。不考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 = 450$；考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 + 6 = 456$。
 \end{examplebox}
 
-### 例子 1：padding 保持大小
-
 \begin{examplebox}
-输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $1$。
+\textbf{例子 1：padding 保持大小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $1$。
 
 $$
 H_{out} = \frac{32 + 2 \times 1 - 3}{1} + 1 = 32
@@ -280,10 +266,8 @@ $$
 因此输出为 $32 \times 32 \times 16$。
 \end{examplebox}
 
-### 例子 2：stride 让尺寸减小
-
 \begin{examplebox}
-输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $2$。
+\textbf{例子 2：stride 让尺寸减小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $2$。
 
 $$
 H_{out} = \left\lfloor\frac{32 + 2 \times 1 - 3}{2}\right\rfloor + 1 = 16

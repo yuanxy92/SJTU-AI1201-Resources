@@ -14,7 +14,7 @@ NLP 的目标是让计算机理解、生成和处理自然语言。常见任务�
 \textbf{自然语言处理 NLP：} NLP 是让计算机理解、生成和处理人类自然语言的技术方向。
 \end{definitionbox}
 
-### 文本数据的可变长度
+\textbf{文本数据的可变长度：}
 
 文本和图像的一个关键区别是：文本序列长度通常不固定。不同句子的 token 数可能不同：
 
@@ -35,7 +35,7 @@ NLP 的目标是让计算机理解、生成和处理自然语言。常见任务�
 | 上下文相关 | 当前词含义依赖上下文 | “上海的交通大学”和“上海的交通” |
 | 长程依赖 | 较远位置的信息可能影响后面理解 | 前文主语影响后文指代 |
 
-### MLP、CNN 与 RNN 的区别
+\textbf{MLP、CNN 与 RNN 的区别：}
 
 | 模型 | 输入特点 | 是否天然适合可变长度序列 | 对历史信息的处理 |
 | --- | --- | --- |
@@ -83,7 +83,7 @@ RNN 能处理可变长度文本的原因是：它不是一次性要求输入固�
 文本 -> tokenization -> token 序列 -> one-hot 或 embedding 向量
 ```
 
-### Tokenization 词元化
+\textbf{Tokenization 词元化：}
 
 Tokenization 是把文本切成 token。Token 可以是词、子词、字符或特殊符号。
 
@@ -99,11 +99,9 @@ Tokenization 是把文本切成 token。Token 可以是词、子词、字符或�
 
 特殊符号不要求逐个背，但要知道它们也是 token。比如 `PAD` 常用于把不同长度句子补齐到同一长度，`UNK` 常用于表示词表中没有出现过的词。
 
-### one-hot 与 embedding
+\textbf{one-hot 与 embedding：}
 
-One-hot 用一个很长的向量表示词表中的一个 token，向量中只有一个位置是 1，其余位置是 0。
-
-Embedding 把 token 映射成低维稠密向量。Embedding 矩阵是可训练参数，可以在训练中学习词语之间的关系。
+文本变成 token 以后，还要进一步变成数值向量。常见表示方式是 one-hot 和 embedding。
 
 \begin{definitionbox}
 \textbf{One-hot：} One-hot 是用词表长度的稀疏向量表示一个 token，只有该 token 对应位置为 1，其余位置为 0。
