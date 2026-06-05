@@ -61,9 +61,9 @@ $$
 \textbf{卷积运算：} 卷积核在输入图像或特征图上滑动，每次对局部窗口做对应位置相乘再求和，得到输出特征图中的一个值。
 \end{definitionbox}
 
-### 单通道卷积示意
-
-![p11 卷积核在图像局部区域上做加权求和](output/assets/cnn_figures/cnn_p11_convolution-11.png){width=84%}
+\begin{center}
+\includegraphics[width=0.84\linewidth]{output/assets/cnn_figures/cnn_p11_convolution-11.png}
+\end{center}
 
 \begin{examplebox}
 \textbf{单通道卷积例子：}
@@ -115,9 +115,11 @@ Padding 是在图像边缘补值，常见是补 0。作用是控制卷积后图�
 \textbf{Padding：} Padding 是在输入边缘补值，常见是补 0，用来控制卷积后的空间尺寸，并让边缘位置也能参与更多卷积计算。
 \end{definitionbox}
 
-### Padding 示意
+\newpage
 
-![p14 zero padding 和 same padding 示意](output/assets/cnn_figures/cnn_p14_padding-14.png){width=84%}
+\begin{center}
+\includegraphics[width=0.84\linewidth]{output/assets/cnn_figures/cnn_p14_padding-14.png}
+\end{center}
 
 \begin{examplebox}
 \textbf{Zero padding 例子：} 原图像为 $3 \times 3$：
@@ -159,9 +161,11 @@ Stride 是卷积核滑动步长。课件用 `stride(i, j)` 表示横向跨 `i` �
 \textbf{Stride：} Stride 是卷积核每次滑动的步长。stride 越大，卷积核采样位置越少，输出空间尺寸通常越小。
 \end{definitionbox}
 
-### Stride 示意
+\newpage
 
-![p15 stride(1,1) 和 stride(2,2) 的滑动差别](output/assets/cnn_figures/cnn_p15_stride-15.png){width=84%}
+\begin{center}
+\includegraphics[width=0.84\linewidth]{output/assets/cnn_figures/cnn_p15_stride-15.png}
+\end{center}
 
 \begin{examplebox}
 \textbf{Stride 例子：} 输入长度方向位置为 $1,2,3,4,5$，卷积核大小为 $3$。
@@ -170,6 +174,8 @@ stride 为 $1$ 时，窗口为 $[1,2,3]$、$[2,3,4]$、$[3,4,5]$，输出长度�
 
 stride 为 $2$ 时，窗口为 $[1,2,3]$、$[3,4,5]$，输出长度为 $2$。
 \end{examplebox}
+
+\newpage
 
 ## 多通道卷积
 
@@ -181,9 +187,9 @@ RGB 图像有 3 个输入通道。多通道卷积中，一个完整卷积核需�
 \textbf{多通道卷积：} 对于有 $C_{in}$ 个输入通道的数据，一个完整卷积核的深度也必须覆盖 $C_{in}$ 个通道；一个卷积核产生一个输出通道。
 \end{definitionbox}
 
-### 多通道卷积示意
-
-![p16 多通道卷积示意](output/assets/cnn_figures/cnn_p16_multichannel-16.png){width=84%}
+\begin{center}
+\includegraphics[width=0.84\linewidth]{output/assets/cnn_figures/cnn_p16_multichannel-16.png}
+\end{center}
 
 \begin{examplebox}
 \textbf{多通道卷积例子：} RGB 输入图像有 $3$ 个通道。R 通道局部区域与卷积核 R 部分相乘求和，G 通道局部区域与卷积核 G 部分相乘求和，B 通道局部区域与卷积核 B 部分相乘求和；三个通道结果相加，再加 bias，就是这个卷积核在当前位置的输出。
@@ -290,25 +296,10 @@ $$
 
 页码：p18
 
-池化层用于对局部区域做汇总。常见池化包括最大池化和平均池化。
+池化层用于对局部区域做汇总，常见方式是最大池化和平均池化。池化通常用于降低空间尺寸、减少计算量，一般没有可学习参数，也通常不改变通道数。
 
 \begin{definitionbox}
-\textbf{池化：} 池化是在局部窗口内做汇总操作，例如取最大值或平均值，常用于降低空间尺寸、减少计算量。
-\end{definitionbox}
-
-| 池化方式 | 操作 |
-| --- | --- |
-| 最大池化 | 取局部窗口中的最大值 |
-| 平均池化 | 取局部窗口中的平均值 |
-
-### 池化示意
-
-\begin{definitionbox}
-\textbf{最大池化 max pooling：} 对每个局部窗口取最大值，保留该窗口中最强的响应。
-\end{definitionbox}
-
-\begin{definitionbox}
-\textbf{平均池化 mean pooling：} 对每个局部窗口取平均值，保留该窗口的整体平均水平。
+\textbf{池化 Pooling：} 池化是在局部窗口内做汇总操作。最大池化取窗口最大值，保留最强响应；平均池化取窗口平均值，保留整体平均水平。
 \end{definitionbox}
 
 \begin{examplebox}

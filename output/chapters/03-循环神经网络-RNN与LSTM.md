@@ -280,7 +280,7 @@ LSTM 设计里最重要的点：
 
 \newpage
 
-### RNN 与 LSTM 的区别
+普通 RNN 与 LSTM 的区别可以概括为：
 
 \begin{tabularx}{\linewidth}{p{0.16\linewidth}X X}
 \hline
