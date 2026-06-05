@@ -253,11 +253,11 @@ W_out = floor((W + 2P - K) / S) + 1
 ```
 
 \begin{examplebox}
-\textbf{例子：} 输入通道数 $C_{in}=3$，卷积核大小 $K=5$，卷积核个数 $C_{out}=6$。不考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 = 450$；考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 + 6 = 456$。
+\textbf{例子 1：参数量计算。} 输入通道数 $C_{in}=3$，卷积核大小 $K=5$，卷积核个数 $C_{out}=6$。不考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 = 450$；考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 + 6 = 456$。
 \end{examplebox}
 
 \begin{examplebox}
-\textbf{例子 1：padding 保持大小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $1$。
+\textbf{例子 2：padding 保持大小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $1$。
 
 $$
 H_{out} = \frac{32 + 2 \times 1 - 3}{1} + 1 = 32
@@ -267,7 +267,7 @@ $$
 \end{examplebox}
 
 \begin{examplebox}
-\textbf{例子 2：stride 让尺寸减小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $2$。
+\textbf{例子 3：stride 让尺寸减小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $2$。
 
 $$
 H_{out} = \left\lfloor\frac{32 + 2 \times 1 - 3}{2}\right\rfloor + 1 = 16
