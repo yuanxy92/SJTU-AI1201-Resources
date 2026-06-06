@@ -22,7 +22,7 @@ Transformer 的直观思想可以理解为：当前 token 更新自己时，不�
 \includegraphics[width=0.92\linewidth]{output/assets/transformer_figures/rnn_lstm_vs_transformer_position_encoding.png}
 \end{center}
 
-这张图要表达两件事：第一，RNN/LSTM 通过隐藏状态按时间步串行传递信息，5 个 token 通常要按时间顺序做 5 次串行计算；第二，Transformer 可以把一整段 token 同时送入模型，但 token 向量本身没有“第几个”的概念，因此必须额外加入位置编码。图中，$x_i$ 表示第 $i$ 个输入 token，$p_i$ 表示第 $i$ 个位置编码，$y_i$ 表示第 $i$ 个位置的输出表示。
+这张图要表达两件事：第一，RNN/LSTM 通过隐藏状态按时间步串行传递信息，5 个 token 通常要按时间顺序做 5 次串行计算；第二，Transformer 可以把一整段 token 同时送入模型，并行得到各位置输出，但 token 向量本身没有“第几个”的概念，因此必须额外加入位置编码。图中，$x_i$ 表示第 $i$ 个输入 token，$p_i$ 表示第 $i$ 个位置编码，$y_i$ 表示第 $i$ 个输出 token。
 
 \begin{tabularx}{\linewidth}{p{0.16\linewidth}X X}
 \hline
@@ -81,7 +81,15 @@ $$
 
 页码：p21-p31
 
-注意力机制可以分成四步：先把输入线性变换成 Q、K、V；再用 Q 和 K 算关联强度；然后经过 softmax 得到注意力权重；最后用这些权重对 V 加权求和。先用一个函数表示最基础的 attention：
+\textbf{复习重点：}
+
+1. 输入先通过线性映射得到 $Q$、$K$、$V$。
+2. $QK^T$ 用来计算 token 之间的关联强度。
+3. softmax 把关联强度变成注意力权重。
+4. 注意力权重对 $V$ 加权求和，得到 attention 输出。
+5. 输出矩阵 $W^O$ 用来把 attention 输出映射回模型维度，方便后面做残差连接。
+
+\textbf{基础 attention 函数：}
 
 $$
 \operatorname{Attention}(Q,K,V)
@@ -140,13 +148,19 @@ $$
 X^{qkv(l)}\in R^{n\times d_v}
 $$
 
-最后通常再通过输出线性变换映射回
+最后通过输出矩阵 $W^{O(l)}$ 映射回模型维度：
+
+$$
+X^{pr(l)}=X^{qkv(l)}W^{O(l)}, \qquad W^{O(l)}\in R^{d_v\times d_m}
+$$
+
+所以：
 
 $$
 X^{pr(l)}\in R^{n\times d_m}
 $$
 
-这样才能和原输入 $X^{(l)}$ 做残差相加。
+$W^O$ 的作用就是调整维度：把 $n\times d_v$ 变回 $n\times d_m$，这样才能和原输入 $X^{(l)}$ 做残差相加。
 
 Q 和 K 的最后一维必须相同，都是 $d_k$，因为要计算 $QK^T$。V 的维度 $d_v$ 可以和 $d_k$ 不同，因为 V 不参与匹配打分，它是被注意力权重加权汇总的内容。
 
@@ -242,13 +256,9 @@ $$
 \textbf{Transformer Block：} 一个 Transformer block 通常包含注意力模块、残差连接、LayerNorm 和前馈全连接网络 FNN。
 \end{definitionbox}
 
-\textbf{注意力输出后的线性变换：}
+\textbf{残差连接：}
 
-$$
-X^{pr(l)}=X^{qkv(l)}W^{O(l)}, \qquad W^{O(l)}\in R^{d_v\times d_m}
-$$
-
-线性变换后，$X^{pr(l)}\in R^{n\times d_m}$，才能与输入 $X^{(l)}\in R^{n\times d_m}$ 做残差连接。
+注意力输出后的线性变换 $W^O$ 已在 5.4 节讲过。这里重点记住：线性变换后得到 $X^{pr(l)}\in R^{n\times d_m}$，才能与输入 $X^{(l)}\in R^{n\times d_m}$ 做残差连接。
 
 \textbf{LayerNorm 的计算单位：}
 
