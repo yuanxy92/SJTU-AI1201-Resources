@@ -81,12 +81,14 @@ $$
 
 页码：p21-p31
 
-注意力机制可以分成四步：先把输入线性变换成 Q、K、V；再用 Q 和 K 算关联强度；然后经过 mask 和 softmax 得到注意力权重；最后用这些权重对 V 加权求和。先用一个函数表示整体操作：
+注意力机制可以分成四步：先把输入线性变换成 Q、K、V；再用 Q 和 K 算关联强度；然后经过 softmax 得到注意力权重；最后用这些权重对 V 加权求和。先用一个函数表示最基础的 attention：
 
 $$
 \operatorname{Attention}(Q,K,V)
-=\operatorname{softmax}\left(\operatorname{mask}\left(\frac{QK^T}{\sqrt{d_k}}\right)\right)V
+=\operatorname{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 $$
+
+如果某些位置不能被关注，就在 softmax 前加入 mask。这里先知道 mask 是“遮住某些位置”的操作即可，具体 causal mask 在 5.5 节讲。
 
 这里可以回看前面的位置编码：注意力主要计算 token 之间的相关性，本身不负责记录“谁在第几个位置”，所以输入 Transformer 前要先把位置编码加进去。
 
@@ -159,7 +161,7 @@ $$
 =\operatorname{softmax}(\operatorname{mask}(A^{(l)})), \qquad \operatorname{Attn}^{(l)}\in R^{n\times n}
 $$
 
-其中，$A_{ij}$ 可以理解为第 $i$ 个 token 对第 $j$ 个 token 的关注分数；除以 $\sqrt{d_k}$ 主要是为了训练更稳定。
+其中，$A_{ij}$ 可以理解为第 $i$ 个 token 对第 $j$ 个 token 的关注分数；除以 $\sqrt{d_k}$ 主要是为了训练更稳定。这里的 mask 先作为可选遮挡步骤出现，生成任务里的具体形式见 5.5 节。
 
 \textbf{加权求和：}
 
@@ -204,6 +206,24 @@ $$
 猫 & 我、爱、小、猫 & 无 \\
 \end{tabular}
 \end{center}
+
+对应的 causal mask 可以写成一个矩阵。行表示当前位置，列表示被关注的位置；$0$ 表示允许看，$-\infty$ 表示遮住：
+
+$$
+M=
+\begin{bmatrix}
+0 & -\infty & -\infty & -\infty \\
+0 & 0 & -\infty & -\infty \\
+0 & 0 & 0 & -\infty \\
+0 & 0 & 0 & 0
+\end{bmatrix}
+$$
+
+计算时可以理解为先把 mask 加到注意力分数上：
+
+$$
+\operatorname{Attn}=\operatorname{softmax}(A+M)
+$$
 
 因此，当模型在“我 爱”之后预测下一个 token 时，可以利用“我”和“爱”，但不能提前看到“小”或“猫”。
 \end{examplebox}
