@@ -18,6 +18,44 @@ Transformer 出现前，序列任务常用 RNN/LSTM。RNN/LSTM 能处理序列�
 
 Transformer 的直观思想可以理解为：当前 token 更新自己时，不是只看前一个隐藏状态，而是主动计算“我应该关注哪些 token”，再按关注程度汇总信息。
 
+\begin{center}
+\begin{tikzpicture}[
+  >=Stealth,
+  token/.style={draw, rounded corners=2pt, fill=green!8, minimum width=0.72cm, minimum height=0.42cm},
+  state/.style={draw, rounded corners=2pt, fill=orange!10, minimum width=0.72cm, minimum height=0.42cm},
+  poscode/.style={draw, rounded corners=2pt, fill=blue!7, minimum width=0.72cm, minimum height=0.36cm},
+  block/.style={draw, rounded corners=4pt, fill=gray!8, minimum width=6.4cm, minimum height=0.74cm},
+  note/.style={align=left},
+  every node/.style={font=\small}
+]
+\node[font=\bfseries, anchor=east] at (-0.25,1.6) {RNN/LSTM};
+\foreach \i/\x in {1/0,2/1.15,3/2.3,4/3.45,5/4.6} {
+  \node[token] (rx\i) at (\x,2.05) {$x_{\i}$};
+  \node[state] (rh\i) at (\x,1.25) {$h_{\i}$};
+  \draw[->] (rx\i) -- (rh\i);
+}
+\foreach \i/\j in {1/2,2/3,3/4,4/5} {
+  \draw[->] (rh\i) -- (rh\j);
+}
+\node[note] at (7.0,1.62) {按时间步串行处理\\第 1 个 token 处理完\\才能继续传到后面};
+
+\node[font=\bfseries, anchor=east] at (-0.25,-0.95) {Transformer};
+\foreach \i/\x in {1/0,2/1.15,3/2.3,4/3.45,5/4.6} {
+  \node[poscode] (tp\i) at (\x,-0.15) {$p_{\i}$};
+  \node[token] (tx\i) at (\x,-0.82) {$x_{\i}$};
+  \node at (\x,-0.48) {$+$};
+}
+\node[block] (attn) at (2.3,-1.72) {Self-Attention / FNN};
+\foreach \i in {1,2,3,4,5} {
+  \draw[->] (tx\i) -- (attn.north -| tx\i);
+}
+\node[note] at (7.0,-0.92) {所有 token 可同时输入\\token 本身不带顺序\\顺序由位置编码 $p_i$ 提供};
+\draw[->, thick] (attn.east) -- ++(0.9,0) node[right, note] {并行得到各位置输出};
+\end{tikzpicture}
+\end{center}
+
+这张图要表达两件事：第一，RNN/LSTM 通过隐藏状态按时间步串行传递信息；第二，Transformer 可以把一整段 token 同时送入模型，但 token 向量本身没有“第几个”的概念，因此必须额外加入位置编码。后面讲注意力机制时也要记住：注意力主要计算 token 之间的相关性，本身不负责记录顺序。
+
 \begin{tabularx}{\linewidth}{p{0.16\linewidth}X X}
 \hline
 模型 & 处理序列的方式 & 主要特点 \\
@@ -47,7 +85,7 @@ Next token prediction 已经在“循环神经网络 RNN 与 LSTM”章的 4.4 �
 
 Embedding 已经在“循环神经网络 RNN 与 LSTM”章的 4.3 节讲过：token 先变成 one-hot，再通过可训练 embedding 矩阵映射成低维稠密向量。本节重点是位置编码。
 
-只有 embedding 还不够，因为注意力机制本身不天然知道 token 的顺序。也就是说，如果只看一组 token 向量，模型并不知道谁在第 1 个位置、谁在第 2 个位置。位置编码用于告诉模型每个 token 在序列中的位置。
+前面已经看到，Transformer 会把一组 token 同时送入模型。只有 embedding 还不够，因为注意力机制本身不天然知道 token 的顺序。也就是说，如果只看一组 token 向量，模型并不知道谁在第 1 个位置、谁在第 2 个位置。位置编码用于告诉模型每个 token 在序列中的位置。
 
 \begin{center}
 \includegraphics[width=0.84\linewidth]{output/assets/transformer_figures/transformer_p17_embedding_position.png}
@@ -271,6 +309,7 @@ $$
 \begin{keybox}
 \begin{itemize}
 \item Transformer 用注意力机制直接建模 token 之间的关系，比 RNN 更适合并行计算。p3-p9
+\item RNN/LSTM 按时间步串行处理 token；Transformer 可以并行处理 token，但需要位置编码提供顺序信息。p3-p18
 \item Next token prediction 和 embedding 已在 RNN 章讲过；Transformer 章重点看位置编码、attention 和 block 结构。p10-p18
 \item 位置编码提供 token 位置信息；输入表示通常是 $X^{emb}+X^{pos}$。p15-p18
 \item Q 是查询，K 是匹配用的键，V 是真正被汇总的信息内容。p21-p26
