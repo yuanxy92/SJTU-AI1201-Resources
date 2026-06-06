@@ -22,7 +22,7 @@ Transformer 的直观思想可以理解为：当前 token 更新自己时，不�
 \includegraphics[width=0.92\linewidth]{output/assets/transformer_figures/rnn_lstm_vs_transformer_position_encoding.png}
 \end{center}
 
-这张图要表达两件事：第一，RNN/LSTM 通过隐藏状态按时间步串行传递信息；第二，Transformer 可以把一整段 token 同时送入模型，但 token 向量本身没有“第几个”的概念，因此必须额外加入位置编码。先记住这一点，后面讲模型内部机制时会再回到“为什么顺序信息不能省”。
+这张图要表达两件事：第一，RNN/LSTM 通过隐藏状态按时间步串行传递信息，5 个 token 通常要按时间顺序做 5 次串行计算；第二，Transformer 可以把一整段 token 同时送入模型，但 token 向量本身没有“第几个”的概念，因此必须额外加入位置编码。图中，$x_i$ 表示第 $i$ 个输入 token，$p_i$ 表示第 $i$ 个位置编码，$y_i$ 表示第 $i$ 个位置的输出表示。
 
 \begin{tabularx}{\linewidth}{p{0.16\linewidth}X X}
 \hline
@@ -81,7 +81,12 @@ $$
 
 页码：p21-p31
 
-注意力机制可以分成四步：先把输入线性变换成 Q、K、V；再用 Q 和 K 算关联强度；然后经过 mask 和 softmax 得到注意力权重；最后用这些权重对 V 加权求和。
+注意力机制可以分成四步：先把输入线性变换成 Q、K、V；再用 Q 和 K 算关联强度；然后经过 mask 和 softmax 得到注意力权重；最后用这些权重对 V 加权求和。先用一个函数表示整体操作：
+
+$$
+\operatorname{Attention}(Q,K,V)
+=\operatorname{softmax}\left(\operatorname{mask}\left(\frac{QK^T}{\sqrt{d_k}}\right)\right)V
+$$
 
 这里可以回看前面的位置编码：注意力主要计算 token 之间的相关性，本身不负责记录“谁在第几个位置”，所以输入 Transformer 前要先把位置编码加进去。
 
@@ -101,21 +106,7 @@ $$
 X^{(l)}\in R^{n\times d_m}
 $$
 
-其中，$n$ 是 token 数量，$d_m$ 是每个 token 的隐藏向量维度。注意力模块先输出
-
-$$
-X^{qkv(l)}\in R^{n\times d_v}
-$$
-
-然后通常再通过输出线性变换映射回
-
-$$
-X^{pr(l)}\in R^{n\times d_m}
-$$
-
-这样才能和原输入 $X^{(l)}$ 做残差相加。
-
-\textbf{Q、K、V 的计算和维度：}
+其中，$n$ 是 token 数量，$d_m$ 是每个 token 的隐藏向量维度。Q、K、V 不是新的输入数据，而是由同一个输入 $X^{(l)}$ 通过三个可训练线性映射得到：
 
 $$
 Q^{(l)}=X^{(l)}W^{Q(l)}, \qquad W^{Q(l)}\in R^{d_m\times d_k}
@@ -129,11 +120,31 @@ $$
 V^{(l)}=X^{(l)}W^{V(l)}, \qquad W^{V(l)}\in R^{d_m\times d_v}
 $$
 
-因此：
+维度来自矩阵乘法：
+
+$$
+(n\times d_m)(d_m\times d_k)=n\times d_k
+$$
+
+所以：
 
 $$
 Q^{(l)},K^{(l)}\in R^{n\times d_k}, \qquad V^{(l)}\in R^{n\times d_v}
 $$
+
+把它们代入 attention 函数后，先得到 $n\times n$ 的注意力权重，再对 $V^{(l)}$ 加权求和：
+
+$$
+X^{qkv(l)}\in R^{n\times d_v}
+$$
+
+最后通常再通过输出线性变换映射回
+
+$$
+X^{pr(l)}\in R^{n\times d_m}
+$$
+
+这样才能和原输入 $X^{(l)}$ 做残差相加。
 
 Q 和 K 的最后一维必须相同，都是 $d_k$，因为要计算 $QK^T$。V 的维度 $d_v$ 可以和 $d_k$ 不同，因为 V 不参与匹配打分，它是被注意力权重加权汇总的内容。
 
