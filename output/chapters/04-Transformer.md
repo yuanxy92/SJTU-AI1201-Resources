@@ -81,15 +81,7 @@ $$
 
 页码：p21-p31
 
-\textbf{复习重点：}
-
-1. 输入先通过线性映射得到 $Q$、$K$、$V$。
-2. $QK^T$ 用来计算 token 之间的关联强度。
-3. softmax 把关联强度变成注意力权重。
-4. 注意力权重对 $V$ 加权求和，得到 attention 输出。
-5. 输出矩阵 $W^O$ 用来把 attention 输出映射回模型维度，方便后面做残差连接。
-
-\textbf{基础 attention 函数：}
+注意力主要计算 token 之间的相关性，本身不负责记录“谁在第几个位置”，所以输入 Transformer 前要先把位置编码加进去。基础 attention 函数可以写成：
 
 $$
 \operatorname{Attention}(Q,K,V)
@@ -97,8 +89,6 @@ $$
 $$
 
 如果某些位置不能被关注，就在 softmax 前加入 mask。这里先知道 mask 是“遮住某些位置”的操作即可，具体 causal mask 在 5.5 节讲。
-
-这里可以回看前面的位置编码：注意力主要计算 token 之间的相关性，本身不负责记录“谁在第几个位置”，所以输入 Transformer 前要先把位置编码加进去。
 
 \begin{center}
 \includegraphics[width=0.86\linewidth]{output/assets/transformer_figures/transformer_p25_qkv.png}
@@ -108,80 +98,64 @@ $$
 \textbf{Q、K、V：} Q 是 Query，表示当前 token 发出的查询；K 是 Key，表示每个 token 可被匹配的键；V 是 Value，表示真正被加权汇总的信息内容。
 \end{definitionbox}
 
-\textbf{输入和输出：}
+\textbf{Step 1：线性映射得到 Q、K、V}
 
-设第 $l$ 层输入为
-
-$$
-X^{(l)}\in R^{n\times d_m}
-$$
-
-其中，$n$ 是 token 数量，$d_m$ 是每个 token 的隐藏向量维度。Q、K、V 不是新的输入数据，而是由同一个输入 $X^{(l)}$ 通过三个可训练线性映射得到：
+Input：$X^{(l)}\in R^{n\times d_m}$。其中，$n$ 是 token 数量，$d_m$ 是每个 token 的隐藏向量维度。Q、K、V 不是新的输入数据，而是由同一个输入 $X^{(l)}$ 通过三个可训练线性映射得到：
 
 $$
-Q^{(l)}=X^{(l)}W^{Q(l)}, \qquad W^{Q(l)}\in R^{d_m\times d_k}
+\begin{aligned}
+Q^{(l)}&=X^{(l)}W^{Q(l)}, & W^{Q(l)}&\in R^{d_m\times d_k}\\
+K^{(l)}&=X^{(l)}W^{K(l)}, & W^{K(l)}&\in R^{d_m\times d_k}\\
+V^{(l)}&=X^{(l)}W^{V(l)}, & W^{V(l)}&\in R^{d_m\times d_v}
+\end{aligned}
 $$
 
-$$
-K^{(l)}=X^{(l)}W^{K(l)}, \qquad W^{K(l)}\in R^{d_m\times d_k}
-$$
+Output：$Q^{(l)},K^{(l)}\in R^{n\times d_k}$，$V^{(l)}\in R^{n\times d_v}$。
 
-$$
-V^{(l)}=X^{(l)}W^{V(l)}, \qquad W^{V(l)}\in R^{d_m\times d_v}
-$$
+维度来自矩阵乘法，例如 $(n\times d_m)(d_m\times d_k)=n\times d_k$。Q 和 K 的最后一维必须相同，都是 $d_k$，因为后面要计算 $QK^T$；V 的维度 $d_v$ 可以和 $d_k$ 不同。
 
-维度来自矩阵乘法：
+\textbf{Step 2：用 Q 和 K 计算关联强度}
 
-$$
-(n\times d_m)(d_m\times d_k)=n\times d_k
-$$
-
-所以：
-
-$$
-Q^{(l)},K^{(l)}\in R^{n\times d_k}, \qquad V^{(l)}\in R^{n\times d_v}
-$$
-
-把它们代入 attention 函数后，先得到 $n\times n$ 的注意力权重，再对 $V^{(l)}$ 加权求和：
-
-$$
-X^{qkv(l)}\in R^{n\times d_v}
-$$
-
-最后通过输出矩阵 $W^{O(l)}$ 映射回模型维度：
-
-$$
-X^{pr(l)}=X^{qkv(l)}W^{O(l)}, \qquad W^{O(l)}\in R^{d_v\times d_m}
-$$
-
-所以：
-
-$$
-X^{pr(l)}\in R^{n\times d_m}
-$$
-
-$W^O$ 的作用就是调整维度：把 $n\times d_v$ 变回 $n\times d_m$，这样才能和原输入 $X^{(l)}$ 做残差相加。
-
-Q 和 K 的最后一维必须相同，都是 $d_k$，因为要计算 $QK^T$。V 的维度 $d_v$ 可以和 $d_k$ 不同，因为 V 不参与匹配打分，它是被注意力权重加权汇总的内容。
-
-\textbf{注意力权重：}
+Input：$Q^{(l)},K^{(l)}\in R^{n\times d_k}$
 
 $$
 A^{(l)} = \frac{Q^{(l)}(K^{(l)})^T}{\sqrt{d_k}}, \qquad A^{(l)}\in R^{n\times n}
 $$
+
+Output：$A^{(l)}\in R^{n\times n}$。
+
+其中，$A_{ij}$ 可以理解为第 $i$ 个 token 对第 $j$ 个 token 的关注分数；除以 $\sqrt{d_k}$ 主要是为了训练更稳定。
+
+\textbf{Step 3：softmax 得到注意力权重}
+
+Input：$A^{(l)}\in R^{n\times n}$
 
 $$
 \operatorname{Attn}^{(l)}
 =\operatorname{softmax}(\operatorname{mask}(A^{(l)})), \qquad \operatorname{Attn}^{(l)}\in R^{n\times n}
 $$
 
-其中，$A_{ij}$ 可以理解为第 $i$ 个 token 对第 $j$ 个 token 的关注分数；除以 $\sqrt{d_k}$ 主要是为了训练更稳定。这里的 mask 先作为可选遮挡步骤出现，生成任务里的具体形式见 5.5 节。
+Output：$\operatorname{Attn}^{(l)}\in R^{n\times n}$。
 
-\textbf{加权求和：}
+这里的 mask 是可选遮挡步骤，生成任务里的具体形式见 5.5 节。如果不需要遮挡，可以理解为直接对 $A^{(l)}$ 做 softmax。
+
+\textbf{Step 4：对 V 加权求和，并用 $W^O$ 调整维度}
+
+Input：$\operatorname{Attn}^{(l)}\in R^{n\times n}$，$V^{(l)}\in R^{n\times d_v}$
 
 $$
 X^{qkv(l)}=\operatorname{Attn}^{(l)}V^{(l)}, \qquad X^{qkv(l)}\in R^{n\times d_v}
 $$
+
+再通过输出矩阵 $W^{O(l)}$ 映射回模型维度：
+
+$$
+X^{pr(l)}=X^{qkv(l)}W^{O(l)}, \qquad W^{O(l)}\in R^{d_v\times d_m}
+$$
+
+Output：$X^{pr(l)}\in R^{n\times d_m}$。
+
+$W^O$ 的作用就是调整维度：把 $n\times d_v$ 变回 $n\times d_m$，这样才能和原输入 $X^{(l)}$ 做残差相加。
 
 \begin{examplebox}
 \textbf{例子 4：注意力加权求和。} 如果某个 token 对三个位置的注意力权重是 $[0.7,0.2,0.1]$，三个 value 分别是 $[1,3,5]$，则汇总结果为
