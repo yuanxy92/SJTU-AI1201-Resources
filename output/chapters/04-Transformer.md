@@ -81,14 +81,7 @@ $$
 
 页码：p21-p31
 
-注意力主要计算 token 之间的相关性，本身不负责记录“谁在第几个位置”，所以输入 Transformer 前要先把位置编码加进去。基础 attention 函数可以写成：
-
-$$
-\operatorname{Attention}(Q,K,V)
-=\operatorname{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
-$$
-
-如果某些位置不能被关注，就在 softmax 前加入 mask。这里先知道 mask 是“遮住某些位置”的操作即可，具体 causal mask 在 5.5 节讲。
+注意力主要计算 token 之间的相关性，本身不负责记录“谁在第几个位置”，所以输入 Transformer 前要先把位置编码加进去。
 
 \begin{center}
 \includegraphics[width=0.86\linewidth]{output/assets/transformer_figures/transformer_p25_qkv.png}
@@ -97,6 +90,8 @@ $$
 \begin{definitionbox}
 \textbf{Q、K、V：} Q 是 Query，表示当前 token 发出的查询；K 是 Key，表示每个 token 可被匹配的键；V 是 Value，表示真正被加权汇总的信息内容。
 \end{definitionbox}
+
+\textbf{注意力机制的具体计算过程：}
 
 \textbf{Step 1：线性映射得到 Q、K、V}
 
