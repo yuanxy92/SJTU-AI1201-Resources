@@ -45,6 +45,10 @@ $$
 
 图像处理可以理解为：先提取局部简单特征，再逐步整合成复杂信息。
 
+\begin{definitionbox}
+\textbf{类视皮层设计：} CNN 借鉴了“先局部、后整体”的图像处理思路，前面层提取边缘、方向等简单局部特征，后面层逐步组合成更复杂的表示。
+\end{definitionbox}
+
 | 类比对象 | 作用 | CNN 中的对应模块 |
 | --- | --- | --- |
 | 简单细胞 | 对位置、边缘、方向敏感 | 卷积层 |
@@ -221,7 +225,7 @@ $$
 
 页码：p14-p16
 
-卷积层的计算重点记三件事：空间大小怎么变，通道数怎么变，参数量怎么算。
+卷积层的计算围绕三件事：空间大小怎么变，通道数怎么变，参数量怎么算。
 
 \begin{definitionbox}
 \textbf{卷积层输出形状：} 输入为 $H \times W \times C_{\mathrm{in}}$，卷积核个数为 $C_{\mathrm{out}}$ 时，输出形状为 $H_{\mathrm{out}} \times W_{\mathrm{out}} \times C_{\mathrm{out}}$；输出通道数由卷积核个数决定。
@@ -357,7 +361,9 @@ p20 给出了一个典型 CNN 结构：
 \textbf{经典 LeNet 结构：} 输入图像 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 展平 $\rightarrow$ 全连接 $\rightarrow$ 输出。
 \end{examplebox}
 
-需要注意：CNN 没有唯一固定的网络格式。卷积层、激活函数、池化层、全连接层等都可以按任务需要组合。
+\begin{definitionbox}
+\textbf{CNN 结构组合：} CNN 没有唯一固定的网络格式；卷积层、激活函数、池化层、全连接层等可以按任务需要组合。
+\end{definitionbox}
 
 常见组合方式：
 

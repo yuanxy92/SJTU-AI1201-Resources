@@ -1,6 +1,6 @@
 # Transformer
 
-这一章按 PDF 顺序复习：为什么需要 Transformer -> next token prediction 回顾 -> 位置编码 -> 注意力机制与 Q/K/V -> causal mask -> Transformer block -> 输出层。重点是理解 Transformer 如何用注意力机制建模 token 之间的关系，以及为什么它比 RNN 更适合并行计算。
+这一章按 PDF 顺序复习：为什么需要 Transformer -> next token prediction 回顾 -> 位置编码 -> 注意力机制与 Q/K/V -> causal mask -> Transformer block -> 输出层。本章围绕 Transformer 如何用注意力机制建模 token 之间的关系，以及为什么它比 RNN 更适合并行计算。
 
 ## 为什么需要 Transformer
 
@@ -43,7 +43,11 @@ Transformer & 直接计算 token 之间的关系 & 注意力机制更适合全�
 
 页码：p10-p13
 
-Next token prediction 已经在“循环神经网络 RNN 与 LSTM”章的 4.4 节讲过：给定前文 token，模型预测下一个 token，并常用交叉熵损失。Transformer 这一章不重复展开，后面只需要记住：decoder 做生成任务时必须保证当前位置不能看到未来 token，因此需要 causal mask。
+Next token prediction 已经在“循环神经网络 RNN 与 LSTM”章的 4.4 节讲过：给定前文 token，模型预测下一个 token，并常用交叉熵损失。Transformer 这一章不重复展开，后面只保留这个联系：decoder 做生成任务时必须保证当前位置不能看到未来 token，因此需要 causal mask。
+
+\begin{definitionbox}
+\textbf{Next Token Prediction 回顾：} 生成任务中，每个位置预测下一个 token；decoder 训练和生成时不能提前看到未来 token。
+\end{definitionbox}
 
 \begin{examplebox}
 \textbf{例子 2：回看 RNN 章内容。} 输入为“我 爱 小”，目标是预测下一个 token“猫”。Transformer 和 RNN 都可以放在 next token prediction 框架下训练，但 Transformer 用注意力机制处理上下文。
@@ -53,7 +57,7 @@ Next token prediction 已经在“循环神经网络 RNN 与 LSTM”章的 4.4 �
 
 页码：p15-p18
 
-Embedding 已经在“循环神经网络 RNN 与 LSTM”章的 4.3 节讲过：token 先变成 one-hot，再通过可训练 embedding 矩阵映射成低维稠密向量。Embedding 矩阵通常随机初始化，并在训练过程中持续更新。本节重点是位置编码。
+Embedding 已经在“循环神经网络 RNN 与 LSTM”章的 4.3 节讲过：token 先变成 one-hot，再通过可训练 embedding 矩阵映射成低维稠密向量。Embedding 矩阵通常随机初始化，并在训练过程中持续更新。本节讨论位置编码。
 
 前面已经看到，Transformer 会把一组 token 同时送入模型。只有 embedding 还不够，因为 token embedding 只表示“这个 token 是什么”，不表示“这个 token 在第几个位置”。也就是说，如果只看一组 token 向量，模型并不知道谁在第 1 个位置、谁在第 2 个位置。位置编码用于告诉模型每个 token 在序列中的位置。
 
@@ -77,7 +81,7 @@ $$
 \textbf{例子 3：为什么需要位置编码。} “我 爱 小 猫”和“猫 爱 小 我”包含相同 token，但顺序不同，含义也不同。位置编码就是告诉 Transformer：这些 token 分别出现在第几个位置。
 \end{examplebox}
 
-课件后面的复杂位置编码属于阅读材料，复习时不展开推导。考试重点是知道：Transformer 需要位置信息，输入表示通常是 embedding 加位置编码。
+课件后面的复杂位置编码属于阅读材料，复习时不展开推导。这里保留这个关系：Transformer 需要位置信息，输入表示通常是 embedding 加位置编码。
 
 ## 注意力机制与 Q、K、V
 
