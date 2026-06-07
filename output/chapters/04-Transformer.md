@@ -93,20 +93,17 @@ $$
 \textbf{Q、K、V：} Q 是 Query，表示当前 token 发出的查询；K 是 Key，表示每个 token 可被匹配的键；V 是 Value，表示真正被加权汇总的信息内容。
 \end{definitionbox}
 
-\textbf{缩放点积注意力公式：}
+\textbf{总公式：缩放点积注意力}
 
 $$
 \operatorname{Attention}(Q,K,V)
 =\operatorname{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 $$
 
-这条公式的流程是：$QK^T$ 计算关联强度，除以 $\sqrt{d_k}$ 做缩放，softmax 得到注意力权重，最后对 $V$ 加权求和。
+\textbf{这条公式分四步理解：}
 
-\textbf{注意力机制的具体计算过程：}
-
-\textbf{Step 1：线性映射得到 Q、K、V}
-
-Input：$X^{(l)}\in R^{n\times d_m}$。其中，$n$ 是 token 数量，$d_m$ 是每个 token 的隐藏向量维度。Q、K、V 不是新的输入数据，而是由同一个输入 $X^{(l)}$ 通过三个可训练线性映射得到：
+1. 线性映射得到 $Q,K,V$。
+   输入是 $X^{(l)}\in R^{n\times d_m}$，其中 $n$ 是 token 数量，$d_m$ 是每个 token 的隐藏向量维度。$Q,K,V$ 不是新的输入数据，而是由同一个 $X^{(l)}$ 通过三个可训练线性映射得到：
 
 $$
 \begin{aligned}
@@ -116,38 +113,29 @@ V^{(l)}&=X^{(l)}W^{V(l)}, & W^{V(l)}&\in R^{d_m\times d_v}
 \end{aligned}
 $$
 
-Output：$Q^{(l)},K^{(l)}\in R^{n\times d_k}$，$V^{(l)}\in R^{n\times d_v}$。
+   输出为 $Q^{(l)},K^{(l)}\in R^{n\times d_k}$，$V^{(l)}\in R^{n\times d_v}$。Q 和 K 的最后一维必须相同，V 的维度可以不同。一般注意力中，Query 的个数可以和 Key/Value 的个数不同；self-attention 中三者通常来自同一段序列，所以 token 数相同。
 
-维度来自矩阵乘法，例如 $(n\times d_m)(d_m\times d_k)=n\times d_k$。Q 和 K 的最后一维必须相同，都是 $d_k$，因为后面要计算 $QK^T$；V 的维度 $d_v$ 可以和 $d_k$ 不同。一般注意力中，Query 的个数可以和 Key/Value 的个数不同；在 self-attention 中三者通常来自同一段序列，所以 token 数相同。
-
-\textbf{Step 2：用 Q 和 K 计算关联强度}
-
-Input：$Q^{(l)},K^{(l)}\in R^{n\times d_k}$
+2. 用 $Q$ 和 $K$ 计算关联强度。
+   输入是 $Q^{(l)},K^{(l)}\in R^{n\times d_k}$：
 
 $$
 A^{(l)} = \frac{Q^{(l)}(K^{(l)})^T}{\sqrt{d_k}}, \qquad A^{(l)}\in R^{n\times n}
 $$
 
-Output：$A^{(l)}\in R^{n\times n}$。
+   $A_{ij}$ 表示第 $i$ 个 token 对第 $j$ 个 token 的关注分数；除以 $\sqrt{d_k}$ 是为了让训练更稳定。
 
-其中，$A_{ij}$ 可以理解为第 $i$ 个 token 对第 $j$ 个 token 的关注分数；除以 $\sqrt{d_k}$ 主要是为了训练更稳定。
-
-\textbf{Step 3：softmax 得到注意力权重}
-
-Input：$A^{(l)}\in R^{n\times n}$
+3. 对关联强度做 softmax 得到注意力权重。
+   输入是 $A^{(l)}\in R^{n\times n}$：
 
 $$
 \operatorname{Attn}^{(l)}
 =\operatorname{softmax}(\operatorname{mask}(A^{(l)})), \qquad \operatorname{Attn}^{(l)}\in R^{n\times n}
 $$
 
-Output：$\operatorname{Attn}^{(l)}\in R^{n\times n}$。
+   mask 是可选遮挡步骤，生成任务里的 causal mask 见 5.5 节；如果不需要遮挡，可以理解为直接对 $A^{(l)}$ 做 softmax。
 
-这里的 mask 是可选遮挡步骤，生成任务里的具体形式见 5.5 节。如果不需要遮挡，可以理解为直接对 $A^{(l)}$ 做 softmax。
-
-\textbf{Step 4：对 V 加权求和，并用 $W^O$ 调整维度}
-
-Input：$\operatorname{Attn}^{(l)}\in R^{n\times n}$，$V^{(l)}\in R^{n\times d_v}$
+4. 用注意力权重对 $V$ 加权求和，再用 $W^O$ 调整维度。
+   输入是 $\operatorname{Attn}^{(l)}\in R^{n\times n}$，$V^{(l)}\in R^{n\times d_v}$：
 
 $$
 X^{qkv(l)}=\operatorname{Attn}^{(l)}V^{(l)}, \qquad X^{qkv(l)}\in R^{n\times d_v}
@@ -159,9 +147,7 @@ $$
 X^{pr(l)}=X^{qkv(l)}W^{O(l)}, \qquad W^{O(l)}\in R^{d_v\times d_m}
 $$
 
-Output：$X^{pr(l)}\in R^{n\times d_m}$。
-
-$W^O$ 的作用就是调整维度：把 $n\times d_v$ 变回 $n\times d_m$，这样才能和原输入 $X^{(l)}$ 做残差相加。
+   最终输出 $X^{pr(l)}\in R^{n\times d_m}$。$W^O$ 的作用是把 $n\times d_v$ 变回 $n\times d_m$，这样才能和原输入 $X^{(l)}$ 做残差相加。
 
 \begin{examplebox}
 \textbf{例子 4：注意力加权求和。} 如果某个 token 对三个位置的注意力权重是 $[0.7,0.2,0.1]$，三个 value 分别是 $[1,3,5]$，则汇总结果为
@@ -226,7 +212,7 @@ $$
 
 页码：p31-p37
 
-注意力输出后，还会经过线性变换、残差连接和 LayerNorm。之后再接前馈全连接网络 FNN。多个 Transformer block 可以复制堆叠。
+Transformer block 可以理解为“先让 token 之间交流，再分别处理每个 token”。多个 block 可以重复堆叠。
 
 \begin{center}
 \includegraphics[width=0.86\linewidth]{output/assets/transformer_figures/transformer_p31_attention_block.png}
@@ -236,36 +222,26 @@ $$
 \textbf{Transformer Block：} 一个 Transformer block 通常包含注意力模块、残差连接、LayerNorm 和前馈全连接网络 FNN。
 \end{definitionbox}
 
-\textbf{残差连接：}
+\textbf{Block 中四个核心部件：}
 
-注意力输出后的线性变换 $W^O$ 已在 5.4 节讲过。这里重点记住：线性变换后得到 $X^{pr(l)}\in R^{n\times d_m}$，才能与输入 $X^{(l)}\in R^{n\times d_m}$ 做残差连接。
-
-残差连接的基本形式是：
+1. 注意力模块：负责 token 之间的信息交互。注意力输出经 $W^O$ 后变回 $n\times d_m$，才能和输入做残差相加。
+2. 残差连接：把子层输入直接加到子层输出上，基本形式是
 
 $$
 y=x+F(x)
 $$
 
-其中，$x$ 是子层输入，$F(x)$ 是子层学习到的变换。残差连接让模型更容易保留原信息，也有助于缓解深层网络训练困难。
+3. LayerNorm：逐个 token 做归一化。对 $n\times d_m$ 的矩阵，它对每一行 token 向量内部的 $d_m$ 个数计算均值和方差，不在不同 token 之间混合。归一化后还有可训练仿射参数 $\gamma,\beta$。
+4. FNN：逐 token 作用的小 MLP；不同位置共享同一套 FNN 参数。FNN 不负责 token 之间的信息交互，token 之间的 interaction 主要发生在 attention 里。
 
-\textbf{LayerNorm 的计算单位：}
+\textbf{LayerNorm 公式示意：}
 
 $$
 X^{ao(l)}=\operatorname{LayerNorm}(X^{(l)}+X^{pr(l)})
 $$
 
-LayerNorm 是逐个 token 做归一化。也就是说，对一个形状为 $n\times d_m$ 的矩阵，LayerNorm 会对每一行 token 向量内部的 $d_m$ 个数计算均值和方差，而不是在不同 token 之间计算。归一化后通常还会做可训练的仿射变换，参数常记为 $\gamma$ 和 $\beta$。
-
 \begin{examplebox}
-\textbf{例子 6：LayerNorm 以 token 为单位。} 如果输入有 4 个 token，每个 token 是 128 维向量，那么 LayerNorm 会分别对 4 个 token 各自的 128 个数做归一化；它不会把“我”和“爱”两个 token 的数混在一起算均值。
-\end{examplebox}
-
-\textbf{FNN 与 MLP 的关系：}
-
-FNN 是前馈全连接网络，本质上就是一个小 MLP。它对每个 token 分别作用，并且不同位置共享同一套 FNN 参数。FNN 不负责 token 之间的信息交互，token 之间的 interaction 主要发生在 attention 里面。
-
-\begin{examplebox}
-\textbf{例子 7：逐 token 过 FNN。} 对句子“我 爱 小 猫”，FNN 会分别作用在“我”“爱”“小”“猫”对应的隐藏向量上；不同 token 之间的信息交换主要已经在注意力模块中完成。
+\textbf{例子 6：LayerNorm 和 FNN 都是逐 token。} 如果输入有 4 个 token，每个 token 是 128 维向量，LayerNorm 会分别对 4 个 token 各自的 128 个数做归一化；FNN 也分别作用在 4 个 token 上。不同 token 之间的信息交换主要已经在注意力模块中完成。
 \end{examplebox}
 
 ## 输出投影与解码
@@ -302,20 +278,8 @@ $$
 \end{tabularx}
 
 \begin{examplebox}
-\textbf{例子 8：贪婪解码和采样解码的区别。} 假设下一个 token 的概率为：猫 $0.70$、狗 $0.20$、鼠 $0.10$。贪婪解码一定选择概率最大的“猫”；采样解码大多数时候会抽到“猫”，但也有可能抽到“狗”或“鼠”。所以采样解码更有随机性。
+\textbf{例子 7：贪婪解码和采样解码的区别。} 假设下一个 token 的概率为：猫 $0.70$、狗 $0.20$、鼠 $0.10$。贪婪解码一定选择概率最大的“猫”；采样解码大多数时候会抽到“猫”，但也有可能抽到“狗”或“鼠”。所以采样解码更有随机性。
 \end{examplebox}
-
-\textbf{Transformer 整体流程：}
-
-```text
-输入 token
--> Embedding + 位置编码
--> (注意力 + 残差连接 + LayerNorm -> FNN + 残差连接 + LayerNorm) x N
--> 输出投影
--> Softmax 得到下一个 token 概率
-```
-
-多头注意力是了解项：可以把它理解为“多组注意力并行工作”，不同头可能关注不同类型的信息，例如局部关系、长程关系或语义关系。
 
 ## 关键记忆
 
@@ -324,16 +288,15 @@ $$
 \item Transformer 用注意力机制直接建模 token 之间的关系，比 RNN 更适合并行计算。p3-p9
 \item 原始 Transformer 是 encoder-decoder 结构；现在常见生成式大语言模型多用 decoder-only。p3-p9
 \item RNN/LSTM 按时间步串行处理 token；Transformer 可以并行处理 token，但需要位置编码提供顺序信息。p3-p18
-\item Next token prediction 和 embedding 已在 RNN 章讲过；Transformer 章重点看位置编码、attention 和 block 结构。p10-p18
 \item Embedding 矩阵随机初始化并可训练；位置编码提供 token 位置信息，不改变词表大小。p15-p18
-\item Q 是查询，K 是匹配用的键，V 是真正被汇总的信息内容。p21-p26
-\item 缩放点积注意力公式是 $\operatorname{softmax}(QK^T/\sqrt{d_k})V$。p21-p31
-\item Q 和 K 的最后一维必须相同，才能计算 $QK^T$；V 的维度可以不同；Query 个数不一定等于 Key/Value 个数。p21-p26
-\item 注意力输入为 $X^{(l)}\in R^{n\times d_m}$，注意力权重为 $n\times n$，加权求和后得到 $n\times d_v$。p21-p31
+\item 注意力公式是 $\operatorname{softmax}(QK^T/\sqrt{d_k})V$；Q 是查询，K 是匹配用的键，V 是被汇总的信息。p21-p31
+\item Q 和 K 的最后一维必须相同，V 的维度可以不同；注意力权重形状通常是 $n\times n$。p21-p31
 \item Causal mask 保证预测当前位置时不能看到未来 token。p27-p29
-\item 残差连接公式是 $y=x+F(x)$；LayerNorm 逐 token 计算，并有可训练参数 $\gamma,\beta$。p31-p37
-\item FNN 是逐 token 的小 MLP，token 之间的信息交互主要发生在 attention 里。p31-p37
+\item Block 中 attention 负责 token 交互；FNN 逐 token 作用；LayerNorm 逐 token 计算，并有可训练参数 $\gamma,\beta$。p31-p37
+\item 残差连接公式是 $y=x+F(x)$，用于保留原信息并缓解深层训练困难。p31-p37
 \item 输出投影层把隐藏向量映射到词表维度；贪婪解码取最大概率 token，采样解码具有随机性。p38-p39
+\item Transformer 整体流程：输入 token -> Embedding + 位置编码 -> 多层 block -> 输出投影 -> Softmax。p15-p39
+\item 多头注意力是了解项：多组注意力并行工作，不同头可以关注不同类型的信息。p21-p31
 \end{itemize}
 \end{keybox}
 

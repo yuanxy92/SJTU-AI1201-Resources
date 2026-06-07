@@ -87,21 +87,17 @@ RNN 能处理可变长度文本的原因是：它不是一次性要求输入固�
 
 页码：p8-p11
 
-文本进入神经网络通常要经过两步：先把文本切成 token，再把 token 变成向量。
+文本不能直接进入神经网络，通常要先切成 token，再变成向量。
 
 ```text
 文本 -> tokenization -> token 序列 -> one-hot 或 embedding 向量
 ```
 
-\textbf{Tokenization 词元化：}
-
-Tokenization 是把文本切成 token。Token 可以是词、子词、字符或特殊符号。
-
 \begin{definitionbox}
-\textbf{Tokenization：} Tokenization 是把原始文本切分成 token 序列的过程；输入是文本，输出是 token 序列。
+\textbf{Tokenization：} Tokenization 是把原始文本切分成 token 序列的过程；token 可以是词、子词、字符或特殊符号。
 \end{definitionbox}
 
-词元化可以基于规则，也可以基于统计。考试重点不是背复杂算法细节，而是知道“文本如何变成 token 序列”，并能认出几种常见方法。
+\textbf{常见词元化方法：}
 
 | 方法 | 记忆 |
 | --- | --- |
@@ -111,10 +107,10 @@ Tokenization 是把文本切成 token。Token 可以是词、子词、字符或�
 | Unigram | 用统计模型选择合适的子词切分 |
 
 \begin{examplebox}
-\textbf{Tokenization 例子：} 原始句子“我喜欢人工智能”可以切成词级 token：$[\text{我}, \text{喜欢}, \text{人工智能}]$；也可以切成子词级 token：$[\text{我}, \text{喜欢}, \text{人工}, \text{智能}]$。不同 tokenization 方式会产生不同 token 序列。
+\textbf{例子 1：Tokenization。} “我喜欢人工智能”可以切成词级 token：$[\text{我}, \text{喜欢}, \text{人工智能}]$；也可以切成子词级 token：$[\text{我}, \text{喜欢}, \text{人工}, \text{智能}]$。
 \end{examplebox}
 
-特殊符号也是 token，常用于标记句子边界、补齐长度或处理未知词。
+\textbf{常见特殊符号：}
 
 | 特殊符号 | 常见含义 |
 | --- | --- |
@@ -124,9 +120,7 @@ Tokenization 是把文本切成 token。Token 可以是词、子词、字符或�
 | `PAD` | 填充标记，用于补齐长度 |
 | `UNK` | 未登录词或未知 token |
 
-\textbf{one-hot 与 embedding：}
-
-文本变成 token 以后，还要进一步变成数值向量。常见表示方式是 one-hot 和 embedding。
+Token 还需要变成数值向量，常见表示方式是 one-hot 和 embedding。
 
 \begin{definitionbox}
 \textbf{One-hot：} One-hot 是用词表长度的稀疏向量表示一个 token，只有该 token 对应位置为 1，其余位置为 0。
@@ -142,10 +136,10 @@ Tokenization 是把文本切成 token。Token 可以是词、子词、字符或�
 | embedding | 低维、稠密、可训练 | 可以学习语义关系 |
 
 \begin{examplebox}
-\textbf{例子：} 设词表为“我、喜欢、人工智能、这门课”，token “喜欢”的 one-hot 可以写成 $[0,1,0,0]$，维度等于词表大小 $4$。如果 embedding 维度设为 $3$，它可能被映射为 $[0.12,-0.38,0.51]$。
+\textbf{例子 2：One-hot 与 embedding。} 设词表为“我、喜欢、人工智能、这门课”，token “喜欢”的 one-hot 可以写成 $[0,1,0,0]$，维度等于词表大小 $4$。如果 embedding 维度设为 $3$，它可能被映射为 $[0.12,-0.38,0.51]$。
 \end{examplebox}
 
-Embedding 的计算可以理解为矩阵乘法，也可以理解为查表。设词表大小为 $N$，embedding 维度为 $d$：
+Embedding 通常由一个可训练矩阵得到，也可以理解为查表。设词表大小为 $N$，embedding 维度为 $d$：
 
 $$
 \varepsilon_i \in R^{N}, \qquad W_{\mathrm{emb}} \in R^{d \times N}
@@ -311,23 +305,19 @@ LSTM 是 Long Short-Term Memory，长短期记忆网络。它在 RNN 基础上�
 
 门通常使用 sigmoid，因为 sigmoid 输出在 0 到 1 之间，适合表示“保留多少”“写入多少”这种比例。候选记忆常用 tanh 提取。
 
-LSTM 中有三条常见设计原则：
-
-1. 信息使用前通常先做线性变换，线性变换中的权重可学习。
-2. 控制比例的“门”通常用 sigmoid，因为输出在 0 到 1 之间。
-3. 提取候选信息时常用 tanh，因为 tanh 输出在 -1 到 1 之间。
+\begin{definitionbox}
+\textbf{LSTM 三条设计原则：} 信息使用前先做可学习的线性变换；控制比例的门用 sigmoid；提取候选信息常用 tanh。
+\end{definitionbox}
 
 \begin{definitionbox}
 \textbf{门控机制：} 门控机制用 0 到 1 之间的比例控制信息流动：遗忘门控制旧记忆保留多少，输入门控制新信息写入多少，输出门控制当前输出多少记忆信息。
 \end{definitionbox}
 
-LSTM 设计里最重要的点：
+LSTM 设计里最重要的三件事：
 
 1. 多了一条记忆状态 $C_t$，用于保存较长期信息。
-2. 用门控制比例，而不是简单地全保留或全丢弃。
-3. 遗忘门决定旧记忆保留多少。
-4. 输入门决定新信息写入多少。
-5. 输出门决定当前输出多少记忆信息。
+2. 用遗忘门、输入门、输出门控制信息比例。
+3. 门用 sigmoid，候选信息常用 tanh。
 
 LSTM 和 Transformer 的一个共性是：使用信息前通常都会先做可学习的线性变换，用权重矩阵从 token 表示中提取需要的信息。
 
