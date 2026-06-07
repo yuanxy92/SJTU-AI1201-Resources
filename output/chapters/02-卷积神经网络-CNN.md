@@ -194,8 +194,16 @@ stride 为 $2$ 时，窗口为 $[1,2,3]$、$[3,4,5]$，输出长度为 $2$。
 RGB 图像有 3 个输入通道。多通道卷积中，一个完整卷积核需要覆盖所有输入通道。
 
 \begin{definitionbox}
-\textbf{多通道卷积：} 对于有 $C_{in}$ 个输入通道的数据，一个完整卷积核的深度也必须覆盖 $C_{in}$ 个通道；一个卷积核产生一个输出通道。
+\textbf{多通道卷积：} 对于有 $C_{\mathrm{in}}$ 个输入通道的数据，一个完整卷积核的深度也必须覆盖 $C_{\mathrm{in}}$ 个通道；卷积核个数通常记为 $C_{\mathrm{out}}$，也就是输出通道数。
 \end{definitionbox}
+
+\textbf{单个输出通道的计算：}
+
+$$
+Y_j=\sum_{c=1}^{C_{\mathrm{in}}} X_c * K_{j,c}+b_j
+$$
+
+其中，$X_c$ 是第 $c$ 个输入通道，$K_{j,c}$ 是第 $j$ 个卷积核在第 $c$ 个输入通道上的部分，$b_j$ 是第 $j$ 个输出通道的 bias。对 $j=1,\dots,C_{\mathrm{out}}$ 都计算一次，就得到 $C_{\mathrm{out}}$ 个输出通道。
 
 \begin{center}
 \includegraphics[width=0.84\linewidth]{output/assets/cnn_figures/cnn_p16_multichannel-16.png}
@@ -216,30 +224,37 @@ RGB 图像有 3 个输入通道。多通道卷积中，一个完整卷积核需�
 卷积层的计算重点记三件事：空间大小怎么变，通道数怎么变，参数量怎么算。
 
 \begin{definitionbox}
-\textbf{卷积层输出形状：} 输入为 $H \times W \times C_{in}$，卷积核个数为 $C_{out}$ 时，输出形状为 $H_{out} \times W_{out} \times C_{out}$；输出通道数由卷积核个数决定。
+\textbf{卷积层输出形状：} 输入为 $H \times W \times C_{\mathrm{in}}$，卷积核个数为 $C_{\mathrm{out}}$ 时，输出形状为 $H_{\mathrm{out}} \times W_{\mathrm{out}} \times C_{\mathrm{out}}$；输出通道数由卷积核个数决定。
 \end{definitionbox}
 
 \textbf{输入、卷积核和输出的形状：}
 
-```text
-输入：H x W x C_in
+$$
+\text{输入：}H\times W\times C_{\mathrm{in}}
+$$
 
-一个卷积核：K x K x C_in
-卷积核个数：C_out
+$$
+\text{一个卷积核：}K\times K\times C_{\mathrm{in}}, \qquad
+\text{卷积核个数：}C_{\mathrm{out}}
+$$
 
-输出：H_out x W_out x C_out
-```
+$$
+\text{输出：}H_{\mathrm{out}}\times W_{\mathrm{out}}\times C_{\mathrm{out}}
+$$
 
-\textbf{符号含义：} `H, W` 是输入高和宽；`C_in` 是输入通道数；`K` 是卷积核大小，例如 `3 x 3` 卷积核中 `K = 3`；`C_out` 是卷积核个数，也就是输出通道数；`H_out, W_out` 是输出高和宽。
+\textbf{符号含义：} $H,W$ 是输入高和宽；$C_{\mathrm{in}}$ 是输入通道数；$K$ 是卷积核大小，例如 $3\times 3$ 卷积核中 $K=3$；$C_{\mathrm{out}}$ 是卷积核个数，也就是输出通道数；$H_{\mathrm{out}},W_{\mathrm{out}}$ 是输出高和宽。
 
 \textbf{输出空间尺寸公式：}
 
-```text
-H_out = floor((H + 2P - K) / S) + 1
-W_out = floor((W + 2P - K) / S) + 1
-```
+$$
+H_{\mathrm{out}}=\left\lfloor\frac{H+2P-K}{S}\right\rfloor+1
+$$
 
-其中，`P` 是 padding 大小，`S` 是 stride 大小，`floor` 表示向下取整。
+$$
+W_{\mathrm{out}}=\left\lfloor\frac{W+2P-K}{S}\right\rfloor+1
+$$
+
+其中，$P$ 是 padding 大小，$S$ 是 stride 大小，$\lfloor\cdot\rfloor$ 表示向下取整。
 
 \textbf{padding、stride、卷积核大小的影响：}
 
@@ -254,23 +269,27 @@ W_out = floor((W + 2P - K) / S) + 1
 
 卷积层通常有 bias。每个卷积核产生一个输出通道，因此每个输出通道对应 1 个 bias。
 
-```text
-不考虑 bias：
-参数量 = K x K x C_in x C_out
+\textbf{不考虑 bias：}
 
-考虑 bias：
-参数量 = K x K x C_in x C_out + C_out
-```
+$$
+\#\text{params}=K\times K\times C_{\mathrm{in}}\times C_{\mathrm{out}}
+$$
+
+\textbf{考虑 bias：}
+
+$$
+\#\text{params}=K\times K\times C_{\mathrm{in}}\times C_{\mathrm{out}}+C_{\mathrm{out}}
+$$
 
 \begin{examplebox}
-\textbf{例子 1：参数量计算。} 输入通道数 $C_{in}=3$，卷积核大小 $K=5$，卷积核个数 $C_{out}=6$。不考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 = 450$；考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 + 6 = 456$。
+\textbf{例子 1：参数量计算。} 输入通道数 $C_{\mathrm{in}}=3$，卷积核大小 $K=5$，卷积核个数 $C_{\mathrm{out}}=6$。不考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 = 450$；考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 + 6 = 456$。
 \end{examplebox}
 
 \begin{examplebox}
 \textbf{例子 2：padding 保持大小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $1$。
 
 $$
-H_{out} = \frac{32 + 2 \times 1 - 3}{1} + 1 = 32
+H_{\mathrm{out}} = \frac{32 + 2 \times 1 - 3}{1} + 1 = 32
 $$
 
 因此输出为 $32 \times 32 \times 16$。
@@ -280,7 +299,7 @@ $$
 \textbf{例子 3：stride 让尺寸减小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $2$。
 
 $$
-H_{out} = \left\lfloor\frac{32 + 2 \times 1 - 3}{2}\right\rfloor + 1 = 16
+H_{\mathrm{out}} = \left\lfloor\frac{32 + 2 \times 1 - 3}{2}\right\rfloor + 1 = 16
 $$
 
 因此输出为 $16 \times 16 \times 16$。
@@ -363,8 +382,8 @@ p20 给出了一个典型 CNN 结构：
 \item Padding 在边缘补值，用来控制输出空间大小；Same Padding 可保持空间尺寸不变。p14
 \item Stride 是卷积核滑动步长；stride 越大，输出空间尺寸通常越小。p15
 \item 多通道卷积中，一个完整卷积核覆盖所有输入通道；一个卷积核产生一个输出通道。p16
-\item 卷积输出空间尺寸看 $H, W, K, P, S$；输出通道数看卷积核个数 $C_{out}$。p14-p16
-\item 卷积参数量看 $K, C_{in}, C_{out}$；有 bias 时再加 $C_{out}$，不要乘 $H_{out}$ 和 $W_{out}$。p14-p16
+\item 卷积输出空间尺寸看 $H, W, K, P, S$；输出通道数看卷积核个数 $C_{\mathrm{out}}$。p14-p16
+\item 卷积参数量看 $K, C_{\mathrm{in}}, C_{\mathrm{out}}$；有 bias 时再加 $C_{\mathrm{out}}$，不要乘 $H_{\mathrm{out}}$ 和 $W_{\mathrm{out}}$。p14-p16
 \item 池化汇总局部信息，降低空间尺寸，通常没有可学习参数，也通常不改变通道数；GAP 会把每个通道压成一个数。p18
 \item CNN 没有唯一固定格式；卷积、激活、池化、展平、全连接、softmax 等模块可以灵活组合，但相邻层的输入输出尺寸必须匹配。p20-p22
 \end{itemize}
@@ -380,7 +399,8 @@ p20 给出了一个典型 CNN 结构：
    答案：通道。
 4. 计算：输入为 `32 x 32 x 3`，卷积核为 `3 x 3`，padding=1，stride=1，卷积核个数为 16，输出尺寸是______。  
    答案：`32 x 32 x 16`。
-5. 计算：一个卷积层中 `K=5`，`C_in=3`，`C_out=6`，且每个卷积核有 bias，参数量是______。  
+5. 计算：一个卷积层中 $K=5$，$C_{\mathrm{in}}=3$，$C_{\mathrm{out}}=6$，且每个卷积核有 bias，参数量是______。
+
    答案：`5 x 5 x 3 x 6 + 6 = 456`。
 6. 判断：全局平均池化 GAP 会把每个通道压成一个数，通常可以减少后续全连接层参数量。
    答案：正确。

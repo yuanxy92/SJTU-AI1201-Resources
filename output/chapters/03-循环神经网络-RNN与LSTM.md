@@ -54,7 +54,7 @@ NLP 的目标是让计算机理解、生成和处理自然语言。常见任务�
 RNN 能处理可变长度文本的原因是：它不是一次性要求输入固定长度向量，而是按时间步逐个读入 token，并把已经读过的信息压缩到隐藏状态中。
 
 \begin{definitionbox}
-\textbf{RNN 处理可变长度序列的核心：} RNN 按时间步逐个处理输入 token，并在每一步更新隐藏状态；同一个 RNN 单元可以重复使用任意多次，因此可以处理不同长度的序列。
+\textbf{RNN 处理可变长度序列的核心：} RNN 按时间步逐个处理输入 token，并在不同时间步共享同一组参数；同一个 RNN 单元可以重复使用任意多次，因此可以处理不同长度的序列。
 \end{definitionbox}
 
 ```text
@@ -247,7 +247,7 @@ $$
 
 \newpage
 
-这一段的重点只记三件事：
+\textbf{RNN 公式需要记住的三件事：}
 
 1. $S_t$ 同时依赖当前输入 $x_t$ 和历史状态 $S_{t-1}$。
 2. 参数 $U, W, V$ 在不同时间步共享。
@@ -303,8 +303,6 @@ LSTM 是 Long Short-Term Memory，长短期记忆网络。它在 RNN 基础上�
 | 输入门 | 控制写入多少新信息 |
 | 输出门 | 控制输出多少记忆信息 |
 
-门通常使用 sigmoid，因为 sigmoid 输出在 0 到 1 之间，适合表示“保留多少”“写入多少”这种比例。候选记忆常用 tanh 提取。
-
 \begin{definitionbox}
 \textbf{LSTM 三条设计原则：} 信息使用前先做可学习的线性变换；控制比例的门用 sigmoid；提取候选信息常用 tanh。
 \end{definitionbox}
@@ -312,12 +310,6 @@ LSTM 是 Long Short-Term Memory，长短期记忆网络。它在 RNN 基础上�
 \begin{definitionbox}
 \textbf{门控机制：} 门控机制用 0 到 1 之间的比例控制信息流动：遗忘门控制旧记忆保留多少，输入门控制新信息写入多少，输出门控制当前输出多少记忆信息。
 \end{definitionbox}
-
-LSTM 设计里最重要的三件事：
-
-1. 多了一条记忆状态 $C_t$，用于保存较长期信息。
-2. 用遗忘门、输入门、输出门控制信息比例。
-3. 门用 sigmoid，候选信息常用 tanh。
 
 LSTM 和 Transformer 的一个共性是：使用信息前通常都会先做可学习的线性变换，用权重矩阵从 token 表示中提取需要的信息。
 
@@ -351,7 +343,7 @@ LSTM 和 Transformer 的一个共性是：使用信息前通常都会先做可�
 \item Next Token Prediction 是根据前文预测下一个 token，是自监督训练框架，标签来自文本中的下一个 token。
 \item RNN 的当前隐藏状态依赖当前输入和上一时刻隐藏状态，公式为 $S_t = f(Ux_t + WS_{t-1} + b)$；参数量计算要包含 $U,W,V,b,b_y$。
 \item BPTT 是随时间反向传播；长序列中容易出现梯度消失或梯度爆炸。
-\item LSTM 通过记忆状态和门控机制控制信息保留、写入和输出；门用 sigmoid，候选信息常用 tanh。
+\item LSTM 通过记忆状态和门控机制控制信息保留、写入和输出，可以缓解长程依赖问题。
 \end{itemize}
 \end{keybox}
 
