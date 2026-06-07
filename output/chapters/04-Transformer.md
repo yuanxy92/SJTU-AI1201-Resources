@@ -154,10 +154,10 @@ $$
    最终输出 $X^{pr(l)}\in R^{n\times d_m}$。$W^O$ 的作用是把 $n\times d_v$ 变回 $n\times d_m$，这样才能和原输入 $X^{(l)}$ 做残差相加。
 
 \begin{examplebox}
-\textbf{例子 4：注意力加权求和。} 如果某个 token 对三个位置的注意力权重是 $[0.7,0.2,0.1]$，三个 value 分别是 $[1,3,5]$，则汇总结果为
+\textbf{例子 4：注意力加权求和。} 如果某个 token 对三个位置的注意力权重是 $[0.5,0.3,0.2]$，三个 value 向量的第二个分量分别是 $2,4,1$，则输出向量的第二个分量为
 
 $$
-0.7\times 1+0.2\times 3+0.1\times 5=1.8
+0.5\times 2+0.3\times 4+0.2\times 1=2.4
 $$
 \end{examplebox}
 
