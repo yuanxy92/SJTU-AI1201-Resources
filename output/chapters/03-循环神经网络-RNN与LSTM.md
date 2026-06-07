@@ -81,6 +81,8 @@ RNN 能处理可变长度文本的原因是：它不是一次性要求输入固�
 
 关键理解：数据不是直接进入 RNN。文本通常要先经过清洗、切分和向量化，才能变成神经网络输入。
 
+一般来说，数据量增加有助于提升模型性能；数据质量高可以节约算力、增强稳定性、减少错误输出；大量重复数据可能让模型过度记忆重复模式，反而降低上下文处理能力。
+
 ## 分词、one-hot 与 embedding
 
 页码：p8-p11
@@ -99,13 +101,28 @@ Tokenization 是把文本切成 token。Token 可以是词、子词、字符或�
 \textbf{Tokenization：} Tokenization 是把原始文本切分成 token 序列的过程；输入是文本，输出是 token 序列。
 \end{definitionbox}
 
-词元化可以基于规则，也可以基于统计。考试重点不是背具体分词算法，而是知道“文本如何变成 token 序列”。
+词元化可以基于规则，也可以基于统计。考试重点不是背复杂算法细节，而是知道“文本如何变成 token 序列”，并能认出几种常见方法。
+
+| 方法 | 记忆 |
+| --- | --- |
+| 基于规则 | 按空格、标点、词典等规则切分 |
+| BPE | 从基本字符开始，逐步合并高频相邻片段 |
+| WordPiece | 常见子词切分方法 |
+| Unigram | 用统计模型选择合适的子词切分 |
 
 \begin{examplebox}
 \textbf{Tokenization 例子：} 原始句子“我喜欢人工智能”可以切成词级 token：$[\text{我}, \text{喜欢}, \text{人工智能}]$；也可以切成子词级 token：$[\text{我}, \text{喜欢}, \text{人工}, \text{智能}]$。不同 tokenization 方式会产生不同 token 序列。
 \end{examplebox}
 
-特殊符号不要求逐个背，但要知道它们也是 token。比如 `PAD` 常用于把不同长度句子补齐到同一长度，`UNK` 常用于表示词表中没有出现过的词。
+特殊符号也是 token，常用于标记句子边界、补齐长度或处理未知词。
+
+| 特殊符号 | 常见含义 |
+| --- | --- |
+| `CLS` | 句首或分类标记 |
+| `SEP` | 句尾或分隔标记 |
+| `MASK` | 掩码标记 |
+| `PAD` | 填充标记，用于补齐长度 |
+| `UNK` | 未登录词或未知 token |
 
 \textbf{one-hot 与 embedding：}
 
@@ -150,11 +167,15 @@ Next Token Prediction 是根据已有前文预测下一个 token。它是现代�
 \textbf{Next Token Prediction：} 给定前文 token 序列，模型预测下一个 token；训练时每个位置的目标通常是输入序列中下一个位置的 token。
 \end{definitionbox}
 
+Next Token Prediction 是一种自监督训练方式：训练标签直接来自原始文本中的“下一个 token”，不需要额外人工标注。
+
 \begin{center}
 \includegraphics[width=0.88\linewidth]{output/assets/rnn_figures/rnn_p14_next_token_training-14.png}
 \end{center}
 
 大量文本都可以转化为“预测下一个 token”的任务：训练时，每个位置预测下一个 token；推理时，模型生成一个 token 后，把它接到上下文后继续生成。图中的 $X^{in}$ 表示输入 token 序列，模型输出 $\hat{X}^{out}$，目标输出 $X^{out}$ 是输入序列整体向后移动一位后的 token 序列。
+
+推理时，模型每一步都会给出下一个 token 的概率分布。可以选择概率最大的 token（贪婪解码），也可以按概率分布采样得到不同输出；生成到终止符号（如 `SEP`）时可以停止。
 
 训练时常用交叉熵损失，真实 token 的概率越高，loss 越小。图中给出的交叉熵损失可以写成：
 
@@ -192,7 +213,7 @@ S_t = f(Ux_t + WS_{t-1} + b), \qquad t = 1,2,\dots,n
 $$
 
 $$
-o_t = g(VS_t)
+o_t = g(VS_t + b_y)
 $$
 
 其中：
@@ -208,9 +229,27 @@ $$
 | $U$ | 输入到隐藏状态的权重矩阵 | $R^{d_h \times d_x}$ |
 | $W$ | 隐藏状态到隐藏状态的权重矩阵 | $R^{d_h \times d_h}$ |
 | $V$ | 隐藏状态到输出的权重矩阵 | $R^{d_y \times d_h}$ |
-| $b$ | 偏置项 | $R^{d_h}$ |
+| $b$ | 隐藏状态偏置项 | $R^{d_h}$ |
+| $b_y$ | 输出偏置项 | $R^{d_y}$ |
 
 $f$ 常用 tanh，$g$ 可以是 softmax。
+
+\textbf{RNN 参数量计算：}
+
+$$
+\#\text{params}
+= d_h d_x + d_h d_h + d_y d_h + d_h + d_y
+$$
+
+其中，$d_h d_x$ 来自 $U$，$d_h d_h$ 来自 $W$，$d_y d_h$ 来自 $V$，$d_h$ 来自隐藏状态偏置 $b$，$d_y$ 来自输出偏置 $b_y$。
+
+\begin{examplebox}
+\textbf{RNN 参数量例子：} 若输入维度 $d_x=4$，隐藏维度 $d_h=3$，输出维度 $d_y=2$，则
+
+$$
+\#\text{params}=3\times 4+3\times 3+2\times 3+3+2=32
+$$
+\end{examplebox}
 
 \newpage
 
@@ -272,6 +311,12 @@ LSTM 是 Long Short-Term Memory，长短期记忆网络。它在 RNN 基础上�
 
 门通常使用 sigmoid，因为 sigmoid 输出在 0 到 1 之间，适合表示“保留多少”“写入多少”这种比例。候选记忆常用 tanh 提取。
 
+LSTM 中有三条常见设计原则：
+
+1. 信息使用前通常先做线性变换，线性变换中的权重可学习。
+2. 控制比例的“门”通常用 sigmoid，因为输出在 0 到 1 之间。
+3. 提取候选信息时常用 tanh，因为 tanh 输出在 -1 到 1 之间。
+
 \begin{definitionbox}
 \textbf{门控机制：} 门控机制用 0 到 1 之间的比例控制信息流动：遗忘门控制旧记忆保留多少，输入门控制新信息写入多少，输出门控制当前输出多少记忆信息。
 \end{definitionbox}
@@ -283,6 +328,8 @@ LSTM 设计里最重要的点：
 3. 遗忘门决定旧记忆保留多少。
 4. 输入门决定新信息写入多少。
 5. 输出门决定当前输出多少记忆信息。
+
+LSTM 和 Transformer 的一个共性是：使用信息前通常都会先做可学习的线性变换，用权重矩阵从 token 表示中提取需要的信息。
 
 \newpage
 
@@ -309,11 +356,12 @@ LSTM 设计里最重要的点：
 \item 文本数据通常是可变长度的；MLP/CNN 不天然适合记忆历史信息，RNN 通过隐藏状态逐步处理序列。
 \item 文本进入神经网络前通常要经过数据清洗、tokenization 和向量化。
 \item Tokenization 是把文本切成 token；token 可以是词、子词、字符或特殊符号。
+\item 常见词元化方法包括基于规则、BPE、WordPiece、Unigram；常见特殊符号包括 CLS、SEP、MASK、PAD、UNK。
 \item One-hot 高维稀疏，本身不表达词义相似性；embedding 低维稠密，可以通过训练学习语义关系。
-\item Next Token Prediction 是根据前文预测下一个 token，是现代语言模型常用训练框架。
-\item RNN 的当前隐藏状态依赖当前输入和上一时刻隐藏状态，公式为 $S_t = f(Ux_t + WS_{t-1} + b)$。
+\item Next Token Prediction 是根据前文预测下一个 token，是自监督训练框架，标签来自文本中的下一个 token。
+\item RNN 的当前隐藏状态依赖当前输入和上一时刻隐藏状态，公式为 $S_t = f(Ux_t + WS_{t-1} + b)$；参数量计算要包含 $U,W,V,b,b_y$。
 \item BPTT 是随时间反向传播；长序列中容易出现梯度消失或梯度爆炸。
-\item LSTM 通过记忆状态和门控机制控制信息保留、写入和输出，可以缓解长程依赖问题。
+\item LSTM 通过记忆状态和门控机制控制信息保留、写入和输出；门用 sigmoid，候选信息常用 tanh。
 \end{itemize}
 \end{keybox}
 
@@ -329,3 +377,5 @@ LSTM 设计里最重要的点：
    答案：正确。
 5. 选择：LSTM 中控制保留多少旧记忆的是：A. 输入门 B. 遗忘门 C. 输出门 D. Softmax。  
    答案：B。
+6. 计算：若 RNN 的输入维度 $d_x=4$，隐藏维度 $d_h=3$，输出维度 $d_y=2$，参数量是多少？
+   答案：$3\times4+3\times3+2\times3+3+2=32$。
