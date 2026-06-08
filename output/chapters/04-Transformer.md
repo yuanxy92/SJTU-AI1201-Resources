@@ -300,15 +300,15 @@ $$
 
 ## 思考题
 
-1. 判断：Transformer 使用注意力机制来建模 token 之间的关系。  
+1. 判断：Transformer 使用注意力机制来建模 token 之间的关系。
    答案：正确。
-2. 填空：Transformer 需要加入 \underline{\hspace{3em}}，用来表示 token 在序列中的位置。  
+2. 填空：Transformer 需要加入 \underline{\hspace{3em}}，用来表示 token 在序列中的位置。
    答案：位置编码。
-3. 选择：Q、K、V 中，用来真正汇总信息内容的是：A. Q；B. K；C. V；D. mask。  
+3. 选择：Q、K、V 中，用来真正汇总信息内容的是：A. Q；B. K；C. V；D. mask。
    答案：C。
-4. 判断：Q 和 K 的最后一维必须相同，因为要计算 $QK^T$。  
+4. 判断：Q 和 K 的最后一维必须相同，因为要计算 $QK^T$。
    答案：正确。
-5. 判断：LayerNorm 是把不同 token 混在一起计算均值和方差。  
+5. 判断：LayerNorm 是把不同 token 混在一起计算均值和方差。
    答案：错误。LayerNorm 是逐 token 在向量内部计算。
 6. 填空：缩放点积注意力的核心公式可以写成 $\operatorname{softmax}(QK^T/\sqrt{d_k})\underline{\hspace{2em}}$。
    答案：$V$。
