@@ -255,6 +255,8 @@ BPTT 是 BackPropagation Through Time，意思是随时间反向传播。训练 
 
 长序列训练时，完整 BPTT 需要展开并回传很多时间步，计算和显存开销都很大。实际训练中常用截断 BPTT，只向前回看有限步数，而不是对无限长历史完整反传。
 
+只记结论：BPTT 在很长时间步上反向传播时，可能出现梯度消失或梯度爆炸；这里不展开原因。
+
 普通 RNN 对长程依赖的建模能力有限。下一节的 LSTM 可以理解为在 RNN 中加入记忆状态和门控机制，用来更好地保留长期信息。
 
 ## LSTM
@@ -315,7 +317,7 @@ LSTM 是 Long Short-Term Memory，长短期记忆网络。它在 RNN 基础上�
 \item One-hot 高维稀疏，本身不表达词义相似性；embedding 由 one-hot 乘可训练矩阵得到，低维稠密，可以通过训练学习语义关系。
 \item Next Token Prediction 是根据前文预测下一个 token，是自监督训练框架，标签来自文本中的下一个 token。
 \item RNN 的当前隐藏状态依赖当前输入和上一时刻隐藏状态，公式为 $S_t = f(Ux_t + WS_{t-1} + b)$；参数量计算要包含 $U,W,V,b,b_y$。
-\item BPTT 是随时间反向传播；长序列训练时，完整 BPTT 计算和显存开销大，常用截断 BPTT。
+\item BPTT 是随时间反向传播；长序列完整反传开销大，常用截断 BPTT；很长时间步上可能出现梯度消失或梯度爆炸，只需记结论。p20
 \item LSTM 通过记忆状态和门控机制控制信息保留、写入和输出，用来缓解普通 RNN 难以保留长期信息的问题。
 \end{itemize}
 \end{keybox}
