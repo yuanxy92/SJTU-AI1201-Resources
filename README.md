@@ -10,9 +10,13 @@ The materials are prepared for an introductory artificial intelligence course an
 output/
   期末复习课详细提纲.md        # Main detailed review outline
   期末复习课详细提纲.pdf       # Exported PDF version for distribution
+  期末复习课短版.md            # Compact last-minute review version
+  期末复习课短版.pdf           # Exported compact PDF
   期末考试复习要点.md          # Earlier/high-level review notes
   复习提纲整理工作流程.md      # Workflow for organizing later chapters
   assets/                     # Figures extracted or prepared for the handout
+scripts/
+  export_md_pdf.sh            # Markdown-to-PDF export script
 ```
 
 ## Review Scope
@@ -44,10 +48,11 @@ The main handout is maintained in Markdown:
 output/期末复习课详细提纲.md
 ```
 
-The exported PDF is:
+The exported PDFs are:
 
 ```text
 output/期末复习课详细提纲.pdf
+output/期末复习课短版.pdf
 ```
 
 In the local working directory, the export script is:
@@ -56,7 +61,7 @@ In the local working directory, the export script is:
 scripts/export_md_pdf.sh
 ```
 
-The script requires `pandoc` and `xelatex`. The script itself is not tracked in this repository because this repo is intended to store the review materials rather than the local build environment.
+The script requires `pandoc` and `xelatex`.
 
 ## Notes
 
