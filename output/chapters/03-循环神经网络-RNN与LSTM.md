@@ -78,6 +78,8 @@ RNN 不要求一次性输入固定长度向量，而是按时间步读入 token�
 
 \textbf{常见词元化方法：}
 
+下面这些方法只需要知道是常见切分方式，不需要背具体算法细节。
+
 | 方法 | 记忆 |
 | --- | --- |
 | 基于规则 | 按空格、标点、词典等规则切分 |
@@ -90,6 +92,8 @@ RNN 不要求一次性输入固定长度向量，而是按时间步读入 token�
 \end{examplebox}
 
 \textbf{常见特殊符号：}
+
+下面这些符号只是常见约定，用来帮助读图和理解输入格式，不需要逐个背诵。
 
 | 特殊符号 | 常见含义 |
 | --- | --- |
@@ -115,10 +119,10 @@ Token 还需要变成数值向量，常见表示方式是 one-hot 和 embedding�
 | embedding | 低维、稠密、可训练 | 可以学习语义关系 |
 
 \begin{examplebox}
-\textbf{例子 2：One-hot 与 embedding。} 设词表为“我、喜欢、人工智能、这门课”，token “喜欢”的 one-hot 可以写成 $[0,1,0,0]$，维度等于词表大小 $4$。如果 embedding 维度设为 $3$，它可能被映射为 $[0.12,-0.38,0.51]$。
+\textbf{例子 2：One-hot 与 embedding。} 设词表为“我、喜欢、人工智能、这门课”，token “喜欢”的 one-hot 可以写成 $[0,1,0,0]$，维度等于词表大小 $4$。如果 embedding 维度设为 $3$，它会通过可训练矩阵映射为一个三维向量，例如 $[0.12,-0.38,0.51]$。
 \end{examplebox}
 
-Embedding 通常由一个可训练矩阵得到，也可以理解为查表。设词表大小为 $N$，embedding 维度为 $d$：
+Embedding 向量由 one-hot 向量乘上一个可训练矩阵得到。设词表大小为 $N$，embedding 维度为 $d$：
 
 $$
 \varepsilon_i \in R^{N}, \qquad W_{\mathrm{emb}} \in R^{d \times N}
@@ -203,7 +207,7 @@ $$
 | $b$ | 隐藏状态偏置项 | $R^{d_h}$ |
 | $b_y$ | 输出偏置项 | $R^{d_y}$ |
 
-$f$ 常用 tanh，$g$ 可以是 softmax。
+$f$ 常用 tanh，$g$ 在分类或预测 token 时常用 softmax。
 
 \textbf{RNN 参数量计算：}
 
@@ -222,15 +226,16 @@ $$
 $$
 \end{examplebox}
 
-\textbf{RNN 公式中的三件事：}
-
-1. $S_t$ 同时依赖当前输入 $x_t$ 和历史状态 $S_{t-1}$。
-2. 参数 $U, W, V$ 在不同时间步共享。
-3. 输入多少个 token，就重复多少次同样的 RNN 单元，所以可以处理可变长度序列。
-
 \begin{definitionbox}
-\textbf{Encoder-Decoder RNN：} Encoder-Decoder RNN 先把输入序列编码成上下文表示，再逐步解码生成输出序列，因此可以处理输入输出长度不同的任务，例如机器翻译。
+\textbf{RNN 公式中的三件事：}
+\begin{enumerate}
+\item $S_t$ 同时依赖当前输入 $x_t$ 和历史状态 $S_{t-1}$。
+\item 参数 $U, W, V$ 在不同时间步共享。
+\item 输入多少个 token，就重复多少次同样的 RNN 单元，所以可以处理可变长度序列。
+\end{enumerate}
 \end{definitionbox}
+
+\textbf{Encoder-Decoder RNN：} Encoder-Decoder RNN 先把输入序列编码成上下文表示，再逐步解码生成输出序列，可以处理输入输出长度不同的任务，例如机器翻译。这部分理解思想即可。
 
 ## BPTT 与梯度问题
 
@@ -246,14 +251,16 @@ BPTT 是 BackPropagation Through Time，意思是随时间反向传播。训练 
 \includegraphics[width=0.95\linewidth]{output/assets/rnn_figures/Picture1.png}
 \end{center}
 
-长序列中，梯度需要经过很多次链式相乘，容易出现两个问题：
+图中上半部分表示 RNN 按时间步展开；下半部分的红色箭头表示误差沿展开后的时间方向反向传播，计算梯度并用梯度下降更新参数。
+
+长序列中，梯度需要经过很多次链式相乘，容易出现两个问题。这个原因和深层神经网络中的梯度消失/爆炸类似：路径越长，连乘次数越多，梯度就越容易不断变小或不断变大。
 
 | 问题 | 含义 | 影响 |
 | --- | --- | --- |
 | 梯度消失 | 梯度越来越小 | 较早时间步的信息难以学习 |
 | 梯度爆炸 | 梯度越来越大 | 训练不稳定 |
 
-因此，普通 RNN 对长程依赖的建模能力有限。
+因此，普通 RNN 对长程依赖的建模能力有限。直觉上类似前面残差连接“让信息和梯度更容易传递”的思路，LSTM 在 RNN 中加入更稳定的信息通路和门控机制，用来缓解长序列中的梯度问题和长期记忆问题。
 
 如果序列非常长，理论上完整 BPTT 要展开并回传很多时间步，计算和显存开销都很大。实际训练中常用截断 BPTT，只向前回看有限步数，而不是对无限长历史完整反传。
 
@@ -264,11 +271,11 @@ BPTT 是 BackPropagation Through Time，意思是随时间反向传播。训练 
 LSTM 是 Long Short-Term Memory，长短期记忆网络。它在 RNN 基础上引入记忆状态，并通过门控机制控制信息流动。
 
 \begin{center}
-\includegraphics[width=0.92\linewidth]{output/assets/rnn_figures/rnn_p24_lstm_gates-24.png}
+\includegraphics[width=0.86\linewidth]{output/assets/rnn_figures/rnn_p24_lstm_gates_compact.png}
 \end{center}
 
 \begin{definitionbox}
-\textbf{LSTM：} LSTM 是一种改进的 RNN，它通过记忆状态和门控机制控制信息的保留、写入和输出，用来缓解普通 RNN 的长程依赖问题。
+\textbf{LSTM：} LSTM 是一种改进的 RNN，它通过记忆状态和门控机制控制信息的保留、写入和输出，用来缓解普通 RNN 的长程依赖、梯度消失和梯度爆炸问题。
 \end{definitionbox}
 
 | 结构 | 作用 |
@@ -279,22 +286,15 @@ LSTM 是 Long Short-Term Memory，长短期记忆网络。它在 RNN 基础上�
 | 输出门 | 控制输出多少记忆信息 |
 
 \begin{definitionbox}
-\textbf{LSTM 三条设计原则：} 信息使用前先做可学习的线性变换；控制比例的门用 sigmoid；提取候选信息常用 tanh。
+\textbf{LSTM 三条设计原则：}
+\begin{enumerate}
+\item 信息使用前先做可学习的线性变换。
+\item 控制比例的“门”用 sigmoid，输出在 0 到 1 之间。
+\item 提取候选信息常用 tanh。
+\end{enumerate}
 \end{definitionbox}
 
-\begin{definitionbox}
-\textbf{门控机制：} 门控机制用 0 到 1 之间的比例控制信息流动：遗忘门保留旧记忆，输入门写入新信息，输出门控制当前输出。
-\end{definitionbox}
-
-遗忘门 $f_t\in(0,1)$。记忆状态沿时间传播时，可以直观理解为：
-
-$$
-\frac{\partial C_t}{\partial C_{t-1}}\approx f_t
-$$
-
-因此，$f_t$ 越接近 1，旧记忆和梯度越容易保留；越接近 0，旧记忆越容易被遗忘。
-
-LSTM 和 Transformer 的一个共性是：使用信息前通常都会先做可学习的线性变换，用权重矩阵从 token 表示中提取需要的信息。
+\textbf{门控机制：} 门控机制用 0 到 1 之间的比例控制信息流动：遗忘门控制保留多少旧记忆，输入门控制写入多少新信息，输出门控制输出多少记忆信息。这里理解概念即可，不需要记复杂公式。
 
 普通 RNN 与 LSTM 的区别可以概括为：
 
@@ -318,13 +318,12 @@ LSTM 和 Transformer 的一个共性是：使用信息前通常都会先做可�
 \item NLP 处理的是离散符号序列，词语顺序和上下文都很重要。
 \item 文本数据通常是可变长度的；MLP/CNN 不天然适合记忆历史信息，RNN 通过隐藏状态逐步处理序列。
 \item 文本进入神经网络前通常要经过数据清洗、tokenization 和向量化。
-\item Tokenization 是把文本切成 token；token 可以是词、子词、字符或特殊符号。
-\item 常见词元化方法包括基于规则、BPE、WordPiece、Unigram；常见特殊符号包括 CLS、SEP、MASK、PAD、UNK。
-\item One-hot 高维稀疏，本身不表达词义相似性；embedding 低维稠密，可以通过训练学习语义关系。
+\item Tokenization 是把文本切成 token；常见词元化方法和特殊符号只需理解用途，不需要作为背诵清单。
+\item One-hot 高维稀疏，本身不表达词义相似性；embedding 由 one-hot 乘可训练矩阵得到，低维稠密，可以通过训练学习语义关系。
 \item Next Token Prediction 是根据前文预测下一个 token，是自监督训练框架，标签来自文本中的下一个 token。
 \item RNN 的当前隐藏状态依赖当前输入和上一时刻隐藏状态，公式为 $S_t = f(Ux_t + WS_{t-1} + b)$；参数量计算要包含 $U,W,V,b,b_y$。
 \item BPTT 是随时间反向传播；长序列中容易出现梯度消失或梯度爆炸。
-\item LSTM 通过记忆状态和门控机制控制信息保留、写入和输出；遗忘门 $f_t$ 取值在 0 到 1 之间，可调节旧记忆和梯度的保留比例。
+\item LSTM 通过记忆状态和门控机制控制信息保留、写入和输出，用来缓解普通 RNN 的长程依赖、梯度消失和梯度爆炸问题。
 \end{itemize}
 \end{keybox}
 
