@@ -43,23 +43,13 @@ $$
 
 页码：p7-p10
 
-图像处理可以理解为：先提取局部简单特征，再逐步整合成复杂信息。
+图像处理可以理解为：先提取局部简单特征，再逐步整合成复杂信息。这个部分主要用于理解 CNN 的设计动机。
 
 \begin{definitionbox}
 \textbf{类视皮层设计：} CNN 借鉴了“先局部、后整体”的图像处理思路，前面层提取边缘、方向等简单局部特征，后面层逐步组合成更复杂的表示。
 \end{definitionbox}
 
-| 类比对象 | 作用 | CNN 中的对应模块 |
-| --- | --- | --- |
-| 简单细胞 | 对位置、边缘、方向敏感 | 卷积层 |
-| 复杂细胞 | 整合多个局部输入 | 池化、全连接等后续模块 |
-
-| CNN 模块 | 作用 |
-| --- | --- |
-| 卷积层 | 提取局部特征 |
-| 池化层 | 汇总局部信息 |
-| 全连接层 | 综合特征 |
-| 输出层 | 输出类别或概率 |
+简单记忆：卷积层像简单细胞，先提取边缘、方向等局部特征；池化和全连接等后续模块再逐步汇总信息。
 
 ## 卷积运算
 
@@ -129,8 +119,6 @@ Padding 是在图像边缘补值，常见是补 0。作用是控制卷积后图�
 
 Same Padding 指通过合适的 padding 让输出空间尺寸和输入空间尺寸相同。填充本身只是补值，不会引入可学习参数。
 
-\newpage
-
 \begin{center}
 \includegraphics[width=0.84\linewidth]{output/assets/cnn_figures/cnn_p14_padding-14.png}
 \end{center}
@@ -175,8 +163,6 @@ Stride 是卷积核滑动步长。课件用 `stride(i, j)` 表示横向跨 `i` �
 \textbf{Stride：} Stride 是卷积核每次滑动的步长。stride 越大，卷积核采样位置越少，输出空间尺寸通常越小。
 \end{definitionbox}
 
-\newpage
-
 \begin{center}
 \includegraphics[width=0.84\linewidth]{output/assets/cnn_figures/cnn_p15_stride-15.png}
 \end{center}
@@ -188,8 +174,6 @@ stride 为 $1$ 时，窗口为 $[1,2,3]$、$[2,3,4]$、$[3,4,5]$，输出长度�
 
 stride 为 $2$ 时，窗口为 $[1,2,3]$、$[3,4,5]$，输出长度为 $2$。
 \end{examplebox}
-
-\newpage
 
 ## 多通道卷积
 
@@ -231,7 +215,7 @@ $$
 \textbf{卷积层输出形状：} 输入为 $H \times W \times C_{\mathrm{in}}$，卷积核个数为 $C_{\mathrm{out}}$ 时，输出形状为 $H_{\mathrm{out}} \times W_{\mathrm{out}} \times C_{\mathrm{out}}$；输出通道数由卷积核个数决定。
 \end{definitionbox}
 
-\textbf{输入、卷积核和输出的形状：}
+\textbf{输入、卷积核和输出形状：}
 
 $$
 \text{输入：}H\times W\times C_{\mathrm{in}}
@@ -246,7 +230,7 @@ $$
 \text{输出：}H_{\mathrm{out}}\times W_{\mathrm{out}}\times C_{\mathrm{out}}
 $$
 
-\textbf{符号含义：} $H,W$ 是输入高和宽；$C_{\mathrm{in}}$ 是输入通道数；$K$ 是卷积核大小，例如 $3\times 3$ 卷积核中 $K=3$；$C_{\mathrm{out}}$ 是卷积核个数，也就是输出通道数；$H_{\mathrm{out}},W_{\mathrm{out}}$ 是输出高和宽。
+$H,W$ 是输入高和宽；$C_{\mathrm{in}}$ 是输入通道数；$K$ 是卷积核大小；$C_{\mathrm{out}}$ 是卷积核个数，也就是输出通道数。
 
 \textbf{输出空间尺寸公式：}
 
@@ -260,7 +244,7 @@ $$
 
 其中，$P$ 是 padding 大小，$S$ 是 stride 大小，$\lfloor\cdot\rfloor$ 表示向下取整。
 
-\textbf{padding、stride、卷积核大小的影响：}
+\textbf{尺寸影响：}
 
 | 参数 | 增大后通常会怎样 | 直观理解 |
 | --- | --- | --- |
@@ -271,9 +255,7 @@ $$
 
 \textbf{参数量计算：}
 
-卷积层通常有 bias。每个卷积核产生一个输出通道，因此每个输出通道对应 1 个 bias。
-
-\textbf{不考虑 bias：}
+卷积层通常有 bias；每个输出通道对应 1 个 bias。
 
 $$
 \#\text{params}=K\times K\times C_{\mathrm{in}}\times C_{\mathrm{out}}
@@ -357,23 +339,15 @@ p20 给出了一个典型 CNN 结构：
 -> Softmax 输出类别概率
 ```
 
-\begin{examplebox}
-\textbf{经典 LeNet 结构：} 输入图像 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 展平 $\rightarrow$ 全连接 $\rightarrow$ 输出。
-\end{examplebox}
-
 \begin{definitionbox}
 \textbf{CNN 结构组合：} CNN 没有唯一固定的网络格式；卷积层、激活函数、池化层、全连接层等可以按任务需要组合。
 \end{definitionbox}
 
-常见组合方式：
+\begin{examplebox}
+\textbf{经典 LeNet 结构：} 输入图像 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 展平 $\rightarrow$ 全连接 $\rightarrow$ 输出。
+\end{examplebox}
 
-```text
-卷积 -> 激活 -> 卷积 -> 激活 -> 池化
-卷积 -> 激活 -> 池化 -> 卷积 -> 激活 -> 池化
-卷积 -> 激活 -> 展平 -> 全连接 -> 输出
-```
-
-只要前一层的输出形状能作为后一层的输入，这些层就可以灵活搭配。不同 CNN 结构的差别，往往就体现在层的数量、顺序、卷积核个数、是否使用池化等设计上。
+只要前一层输出形状能作为后一层输入，卷积、激活、池化、展平、全连接等层就可以灵活搭配。不同 CNN 的差别主要体现在层数、顺序、卷积核个数和是否下采样。
 
 ## 关键记忆
 

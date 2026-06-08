@@ -16,15 +16,13 @@ Transformer 出现前，序列任务常用 RNN/LSTM。RNN/LSTM 能处理序列�
 \textbf{Transformer：} Transformer 是以注意力机制为核心的序列模型，能够直接建模 token 之间的关系，更容易捕捉全局上下文，也更适合并行计算。
 \end{definitionbox}
 
-Transformer 的直观思想可以理解为：当前 token 更新自己时，不是只看前一个隐藏状态，而是主动计算“我应该关注哪些 token”，再按关注程度汇总信息。
-
-原始 Transformer 提出于 2017 年的论文《Attention is all you need》，最初用于机器翻译，采用 encoder-decoder 结构。现在常见的大语言模型多使用 decoder-only 结构，更适合 next token prediction 生成任务。
+Transformer 的直观思想是：当前 token 更新自己时，直接计算“应该关注哪些 token”，再按关注程度汇总信息。原始 Transformer 用于机器翻译，采用 encoder-decoder 结构；现在常见生成式大语言模型多使用 decoder-only 结构。
 
 \begin{center}
 \includegraphics[width=0.92\linewidth]{output/assets/transformer_figures/rnn_lstm_vs_transformer_position_encoding.png}
 \end{center}
 
-这张图要表达两件事：第一，RNN/LSTM 通过隐藏状态按时间步串行传递信息，5 个 token 通常要按时间顺序做 5 次串行计算；第二，Transformer 可以把一整段 token 同时送入模型，并行得到各位置输出，但 token 向量本身没有“第几个”的概念，因此必须额外加入位置编码。图中，$x_i$ 表示第 $i$ 个输入 token，$p_i$ 表示第 $i$ 个位置编码，$y_i$ 表示第 $i$ 个输出 token。
+图中两点最重要：RNN/LSTM 按时间步串行传递信息，5 个 token 通常要做 5 次串行计算；Transformer 可把整段 token 同时送入模型，并行得到输出，但 token 向量本身没有顺序概念，因此必须加入位置编码。$x_i$ 是输入 token，$p_i$ 是位置编码，$y_i$ 是输出 token。
 
 \begin{tabularx}{\linewidth}{p{0.16\linewidth}X X}
 \hline
@@ -49,17 +47,13 @@ Next token prediction 已经在“循环神经网络 RNN 与 LSTM”章的 4.4 �
 \textbf{Next Token Prediction 回顾：} 生成任务中，每个位置预测下一个 token；decoder 训练和生成时不能提前看到未来 token。
 \end{definitionbox}
 
-\begin{examplebox}
-\textbf{例子 2：回看 RNN 章内容。} 输入为“我 爱 小”，目标是预测下一个 token“猫”。Transformer 和 RNN 都可以放在 next token prediction 框架下训练，但 Transformer 用注意力机制处理上下文。
-\end{examplebox}
-
 ## Embedding 与位置编码
 
 页码：p15-p18
 
 Embedding 已经在“循环神经网络 RNN 与 LSTM”章的 4.3 节讲过：token 先变成 one-hot，再通过可训练 embedding 矩阵映射成低维稠密向量。Embedding 矩阵通常随机初始化，并在训练过程中持续更新。本节讨论位置编码。
 
-前面已经看到，Transformer 会把一组 token 同时送入模型。只有 embedding 还不够，因为 token embedding 只表示“这个 token 是什么”，不表示“这个 token 在第几个位置”。也就是说，如果只看一组 token 向量，模型并不知道谁在第 1 个位置、谁在第 2 个位置。位置编码用于告诉模型每个 token 在序列中的位置。
+Transformer 会把一组 token 同时送入模型。Embedding 只表示“这个 token 是什么”，不表示“它在第几个位置”；位置编码用于补上顺序信息。
 
 \begin{center}
 \includegraphics[width=0.84\linewidth]{output/assets/transformer_figures/transformer_p17_embedding_position.png}
@@ -81,7 +75,7 @@ $$
 \textbf{例子 3：为什么需要位置编码。} “我 爱 小 猫”和“猫 爱 小 我”包含相同 token，但顺序不同，含义也不同。位置编码就是告诉 Transformer：这些 token 分别出现在第几个位置。
 \end{examplebox}
 
-课件后面的复杂位置编码属于阅读材料，复习时不展开推导。这里保留这个关系：Transformer 需要位置信息，输入表示通常是 embedding 加位置编码。
+复杂位置编码属于阅读材料，不展开推导；记住输入表示通常是 embedding 加位置编码。
 
 ## 注意力机制与 Q、K、V
 
@@ -104,7 +98,7 @@ $$
 =\operatorname{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 $$
 
-\textbf{这条公式分四步理解：}
+\textbf{四步理解：}
 
 1. 线性映射得到 $Q,K,V$。
    输入是 $X^{(l)}\in R^{n\times d_m}$，其中 $n$ 是 token 数量，$d_m$ 是每个 token 的隐藏向量维度。$Q,K,V$ 不是新的输入数据，而是由同一个 $X^{(l)}$ 通过三个可训练线性映射得到：
@@ -136,7 +130,7 @@ $$
 =\operatorname{softmax}(\operatorname{mask}(A^{(l)})), \qquad \operatorname{Attn}^{(l)}\in R^{n\times n}
 $$
 
-   mask 是可选遮挡步骤，生成任务里的 causal mask 见 5.5 节；如果不需要遮挡，可以理解为直接对 $A^{(l)}$ 做 softmax。
+   mask 是可选遮挡步骤，生成任务里的 causal mask 见下一节；如果不需要遮挡，可直接对 $A^{(l)}$ 做 softmax。
 
 4. 用注意力权重对 $V$ 加权求和，再用 $W^O$ 调整维度。
    输入是 $\operatorname{Attn}^{(l)}\in R^{n\times n}$，$V^{(l)}\in R^{n\times d_v}$：
@@ -216,7 +210,7 @@ $$
 
 页码：p31-p37
 
-Transformer block 可以理解为“先让 token 之间交流，再分别处理每个 token”。多个 block 可以重复堆叠。
+Transformer block 可以理解为“先让 token 之间交流，再分别处理每个 token”。
 
 \begin{center}
 \includegraphics[width=0.86\linewidth]{output/assets/transformer_figures/transformer_p31_attention_block.png}
@@ -252,7 +246,7 @@ $$
 
 页码：p38-p39
 
-最后，输出投影层把每个 token 的隐藏向量映射回词表大小，再经过 softmax 得到下一个 token 的概率分布。
+输出投影层把每个 token 的隐藏向量映射到词表大小，再经过 softmax 得到下一个 token 的概率分布。
 
 \begin{center}
 \includegraphics[width=0.86\linewidth]{output/assets/transformer_figures/transformer_p38_output_projection.png}
