@@ -271,7 +271,7 @@ BPTT 是 BackPropagation Through Time，意思是随时间反向传播。训练 
 LSTM 是 Long Short-Term Memory，长短期记忆网络。它在 RNN 基础上引入记忆状态，并通过门控机制控制信息流动。
 
 \begin{center}
-\includegraphics[width=0.86\linewidth]{output/assets/rnn_figures/rnn_p24_lstm_gates_compact.png}
+\includegraphics[width=0.94\linewidth]{output/assets/rnn_figures/rnn_p24_lstm_gates-24.png}
 \end{center}
 
 \begin{definitionbox}
