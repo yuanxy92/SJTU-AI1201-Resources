@@ -111,7 +111,9 @@ V^{(l)}&=X^{(l)}W^{V(l)}, & W^{V(l)}&\in R^{d_m\times d_v}
 \end{aligned}
 $$
 
-   输出为 $Q^{(l)},K^{(l)}\in R^{n\times d_k}$，$V^{(l)}\in R^{n\times d_v}$。这里 $K$ 和 $V$ 的第一维相同，表示每个 key 都对应一个 value；$Q$ 和 $K$ 的最后一维必须相同，才能做点积；$V$ 的最后一维可以不同。一般注意力中，Query 的个数可以和 Key/Value 的个数不同，也就是 $Q$ 的第一维可以不同；self-attention 中三者来自同一段序列，所以 token 数相同。
+   输出为 $Q^{(l)},K^{(l)}\in R^{n\times d_k}$，$V^{(l)}\in R^{n\times d_v}$。这里 $K$ 和 $V$ 的第一维相同，表示每个 key 都对应一个 value；$Q$ 和 $K$ 的最后一维必须相同，才能做点积；$V$ 的最后一维可以不同。课件中学习的是 self-attention，因此 $Q,K,V$ 都来自同一段序列，第一维都是 $n$。
+
+\noindent\colorbox{orange!12}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\textbf{\textcolor{orange!75!black}{扩展说明：}} 在更一般的 attention，尤其是 cross-attention 中，Query 的个数可以和 Key/Value 的个数不同，也就是 $Q$ 的第一维可以不同；但 $K$ 和 $V$ 仍然要一一配对，所以二者第一维相同。}}
 
 2. 用 $Q$ 和 $K$ 计算关联强度。
    输入是 $Q^{(l)},K^{(l)}\in R^{n\times d_k}$：
@@ -288,7 +290,7 @@ $$
 \item RNN/LSTM 按时间步串行处理 token；Transformer 可以并行处理 token，但需要位置编码提供顺序信息。p3-p18
 \item Embedding 矩阵随机初始化并可训练；位置编码提供 token 位置信息，不改变词表大小。p15-p18
 \item 注意力公式是 $\operatorname{softmax}(QK^T/\sqrt{d_k})V$；Q 是查询，K 是匹配用的键，V 是被汇总的信息。p21-p31
-\item K 和 V 的数量必须相同；Q 和 K 的最后一维必须相同。一般注意力中，Q 的数量可以和 K/V 不同；self-attention 中三者来自同一段序列，所以 token 数相同，注意力权重形状通常是 $n\times n$。p21-p31
+\item K 和 V 的数量必须相同；Q 和 K 的最后一维必须相同。课件重点是 self-attention：Q、K、V 来自同一段序列，所以 token 数相同，注意力权重形状通常是 $n\times n$；扩展到 cross-attention 时，Q 的数量可以和 K/V 不同。p21-p31
 \item Causal mask 保证预测当前位置时不能看到未来 token。p27-p29
 \item Block 中 attention 负责 token 交互；FNN 逐 token 作用；LayerNorm 逐 token 计算，并有可训练参数 $\gamma,\beta$。p31-p37
 \item 残差连接公式是 $y=x+F(x)$，用于保留原信息并缓解深层训练困难。p31-p37
