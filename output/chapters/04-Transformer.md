@@ -288,7 +288,7 @@ $$
 \item RNN/LSTM 按时间步串行处理 token；Transformer 可以并行处理 token，但需要位置编码提供顺序信息。p3-p18
 \item Embedding 矩阵随机初始化并可训练；位置编码提供 token 位置信息，不改变词表大小。p15-p18
 \item 注意力公式是 $\operatorname{softmax}(QK^T/\sqrt{d_k})V$；Q 是查询，K 是匹配用的键，V 是被汇总的信息。p21-p31
-\item K 和 V 的数量必须相同；Q 和 K 的最后一维必须相同；Q 的数量可以和 K/V 不同。self-attention 中三者来自同一段序列，所以注意力权重形状通常是 $n\times n$。p21-p31
+\item K 和 V 的数量必须相同；Q 和 K 的最后一维必须相同。一般注意力中，Q 的数量可以和 K/V 不同；self-attention 中三者来自同一段序列，所以 token 数相同，注意力权重形状通常是 $n\times n$。p21-p31
 \item Causal mask 保证预测当前位置时不能看到未来 token。p27-p29
 \item Block 中 attention 负责 token 交互；FNN 逐 token 作用；LayerNorm 逐 token 计算，并有可训练参数 $\gamma,\beta$。p31-p37
 \item 残差连接公式是 $y=x+F(x)$，用于保留原信息并缓解深层训练困难。p31-p37
