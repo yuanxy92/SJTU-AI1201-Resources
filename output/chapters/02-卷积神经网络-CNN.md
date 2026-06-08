@@ -6,10 +6,10 @@
 
 页码：p3-p5
 
-图像有空间结构。相邻像素通常更相关，距离越远，关联通常越弱。
+图像有空间结构。相邻像素通常更相关，距离越远，关联通常越弱。课件中强调：真实图像主要表现为局部关联，但长程关联也不能完全忽略，因此更接近幂级数衰减，而不是单一的快速指数衰减。
 
 \begin{definitionbox}
-\textbf{图像局部关联性：} 图像中距离较近的像素或局部区域通常更相关，距离越远，相关性通常越弱。CNN 的局部连接设计正是为了利用这种特点。
+\textbf{图像关联性：} 图像数据具有局部关联性，并且整体上更接近幂级数衰减；也就是说，近处像素关联强，远处像素关联弱但不一定迅速消失。CNN 的局部连接设计正是为了利用这种空间关联。
 \end{definitionbox}
 
 如果两个像素点完全独立、互不影响，那么它们的相关函数或互信息量为 0。这个结论常用于判断“两个位置是否还有统计关联”。
@@ -43,13 +43,20 @@ $$
 
 页码：p7-p10
 
-图像处理可以理解为：先提取局部简单特征，再逐步整合成复杂信息。这个部分主要用于理解 CNN 的设计动机。
+大脑视觉系统处理图像时，不是一次性理解整张图，而是先在局部区域检测简单特征，再逐步汇总成更复杂的信息。这个部分主要用于理解 CNN 的设计动机。
 
 \begin{definitionbox}
 \textbf{类视皮层设计：} CNN 借鉴了“先局部、后整体”的图像处理思路，前面层提取边缘、方向等简单局部特征，后面层逐步组合成更复杂的表示。
 \end{definitionbox}
 
-简单记忆：卷积层像简单细胞，先提取边缘、方向等局部特征；池化和全连接等后续模块再逐步汇总信息。
+课件中的对应关系可以这样记：
+
+| 视觉皮层概念 | 作用 | CNN 中的对应 |
+| --- | --- | --- |
+| 简单细胞 | 对位置、边缘和方向敏感；不同简单细胞有不同感受野 | 卷积层：用局部卷积核提取边缘、方向等局部特征 |
+| 复杂细胞 | 整合多个简单细胞的输入 | 后续汇总模块，尤其是全连接层：把局部特征组合成更整体的表示 |
+
+因此，CNN 的设计思路可以理解为：卷积层先像简单细胞一样提取局部特征，再通过池化、全连接等模块逐步汇总信息。
 
 ## 卷积运算
 
@@ -61,22 +68,23 @@ $$
 \textbf{卷积运算：} 卷积核在输入图像或特征图上滑动，每次对局部窗口做对应位置相乘再求和，得到输出特征图中的一个值。
 \end{definitionbox}
 
-卷积核中的权重通常是随机初始化后通过训练学习得到的，并不是固定不变的手工模板。卷积层的 bias 也是可学习参数；每个输出通道通常对应一个 bias 标量。
+卷积核中的权重通常是随机初始化后通过训练学习得到的，并不是固定不变的手工模板。卷积层的偏置（bias）也是可学习参数；每个输出通道通常对应一个偏置标量。
 
 \begin{center}
 \includegraphics[width=0.84\linewidth]{output/assets/cnn_figures/cnn_p11_convolution-11.png}
 \end{center}
 
 \begin{examplebox}
-\textbf{单通道卷积例子：}
+\textbf{例子 1：单通道卷积得到多个输出位置。} 输入为 $4\times 4$，卷积核为 $3\times 3$，不加 padding，stride 为 $1$。
 
-图像局部区域 $X$：
+输入 $X$：
 
 $$
 \begin{bmatrix}
-1 & 2 & 0\\
-3 & 1 & 2\\
-0 & 1 & 1
+1 & 2 & 3 & 4\\
+5 & 6 & 7 & 8\\
+9 & 10 & 11 & 12\\
+13 & 14 & 15 & 16
 \end{bmatrix}
 $$
 
@@ -84,19 +92,37 @@ $$
 
 $$
 \begin{bmatrix}
-1 & 0 & -1\\
-1 & 0 & -1\\
-1 & 0 & -1
+1 & 1 & 1\\
+1 & 1 & 1\\
+1 & 1 & 1
 \end{bmatrix}
 $$
 
-一次卷积输出为
+输出大小为 $2\times 2$，因为 $3\times 3$ 窗口在 $4\times 4$ 输入上有四个可放置位置。四个输出分别是：
 
 $$
-1 \times 1 + 2 \times 0 + 0 \times (-1)
-+ 3 \times 1 + 1 \times 0 + 2 \times (-1)
-+ 0 \times 1 + 1 \times 0 + 1 \times (-1)
-= 1
+Y_{1,1}=1+2+3+5+6+7+9+10+11=54
+$$
+
+$$
+Y_{1,2}=2+3+4+6+7+8+10+11+12=63
+$$
+
+$$
+Y_{2,1}=5+6+7+9+10+11+13+14+15=90
+$$
+
+$$
+Y_{2,2}=6+7+8+10+11+12+14+15+16=99
+$$
+
+所以输出特征图为
+
+$$
+\begin{bmatrix}
+54 & 63\\
+90 & 99
+\end{bmatrix}
 $$
 \end{examplebox}
 
@@ -124,7 +150,7 @@ Same Padding 指通过合适的 padding 让输出空间尺寸和输入空间尺�
 \end{center}
 
 \begin{examplebox}
-\textbf{Zero padding 例子：} 原图像为 $3 \times 3$：
+\textbf{例子 2：Zero padding。} 原图像为 $3 \times 3$：
 
 $$
 \begin{bmatrix}
@@ -150,7 +176,7 @@ $$
 使用 `3 x 3` 卷积核、stride=1 时：
 
 \begin{examplebox}
-不加 padding：$3 \times 3 \rightarrow 1 \times 1$。加 padding 为 $1$：$3 \times 3 \rightarrow 3 \times 3$。
+\textbf{例子 3：padding 对输出大小的影响。} 使用 `3 x 3` 卷积核、stride=1 时，不加 padding：$3 \times 3 \rightarrow 1 \times 1$；加 padding 为 $1$：$3 \times 3 \rightarrow 3 \times 3$。
 \end{examplebox}
 
 ## Stride
@@ -168,11 +194,9 @@ Stride 是卷积核滑动步长。课件用 `stride(i, j)` 表示横向跨 `i` �
 \end{center}
 
 \begin{examplebox}
-\textbf{Stride 例子：} 输入长度方向位置为 $1,2,3,4,5$，卷积核大小为 $3$。
+\textbf{例子 4：对照 stride 图理解滑动步长。} 上图第一行是 stride$(1,1)$：卷积核每次向右或向下移动 $1$ 格，所以相邻窗口高度重叠，输出位置较多。
 
-stride 为 $1$ 时，窗口为 $[1,2,3]$、$[2,3,4]$、$[3,4,5]$，输出长度为 $3$。
-
-stride 为 $2$ 时，窗口为 $[1,2,3]$、$[3,4,5]$，输出长度为 $2$。
+上图第二行是 stride$(2,2)$：卷积核每次向右或向下移动 $2$ 格，中间会跳过一些位置，所以输出位置减少，空间尺寸更小。
 \end{examplebox}
 
 ## 多通道卷积
@@ -187,22 +211,24 @@ RGB 图像有 3 个输入通道。多通道卷积中，一个完整卷积核需�
 
 \textbf{单个输出通道的计算：}
 
+下面公式中的 $*$ 表示单通道卷积操作：先在同一个输入通道内做局部窗口乘加，再把所有输入通道的结果相加。
+
 $$
 Y_j=\sum_{c=1}^{C_{\mathrm{in}}} X_c * K_{j,c}+b_j
 $$
 
-其中，$X_c$ 是第 $c$ 个输入通道，$K_{j,c}$ 是第 $j$ 个卷积核在第 $c$ 个输入通道上的部分，$b_j$ 是第 $j$ 个输出通道的 bias。对 $j=1,\dots,C_{\mathrm{out}}$ 都计算一次，就得到 $C_{\mathrm{out}}$ 个输出通道。
+其中，$X_c$ 是第 $c$ 个输入通道，$K_{j,c}$ 是第 $j$ 个卷积核在第 $c$ 个输入通道上的部分，$b_j$ 是第 $j$ 个输出通道的偏置（bias）。对 $j=1,\dots,C_{\mathrm{out}}$ 都计算一次，就得到 $C_{\mathrm{out}}$ 个输出通道。
 
 \begin{center}
 \includegraphics[width=0.84\linewidth]{output/assets/cnn_figures/cnn_p16_multichannel-16.png}
 \end{center}
 
 \begin{examplebox}
-\textbf{多通道卷积例子：} RGB 输入图像有 $3$ 个通道。R 通道局部区域与卷积核 R 部分相乘求和，G 通道局部区域与卷积核 G 部分相乘求和，B 通道局部区域与卷积核 B 部分相乘求和；三个通道结果相加，再加 bias，就是这个卷积核在当前位置的输出。
+\textbf{例子 5：多通道卷积。} RGB 输入图像有 $3$ 个通道。R 通道局部区域与卷积核 R 部分做一次单通道卷积，G 通道局部区域与卷积核 G 部分做一次单通道卷积，B 通道局部区域与卷积核 B 部分做一次单通道卷积；三个通道结果相加，再加偏置（bias），就是这个卷积核在当前位置的输出。
 \end{examplebox}
 
 \begin{examplebox}
-\textbf{通道数例子：} 输入为 $32 \times 32 \times 3$，一个完整卷积核大小为 $5 \times 5 \times 3$。如果卷积核个数为 $6$，则输出空间大小另算，输出通道数为 $6$。
+\textbf{例子 6：通道数。} 输入为 $32 \times 32 \times 3$，一个完整卷积核大小为 $5 \times 5 \times 3$。如果卷积核个数为 $6$，则输出空间大小另算，输出通道数为 $6$。
 \end{examplebox}
 
 ## 卷积层尺寸计算总结
@@ -255,24 +281,24 @@ $$
 
 \textbf{参数量计算：}
 
-卷积层通常有 bias；每个输出通道对应 1 个 bias。
+卷积层通常有偏置（bias）；每个输出通道对应 1 个偏置。
 
 $$
 \#\text{params}=K\times K\times C_{\mathrm{in}}\times C_{\mathrm{out}}
 $$
 
-\textbf{考虑 bias：}
+\textbf{考虑偏置（bias）：}
 
 $$
 \#\text{params}=K\times K\times C_{\mathrm{in}}\times C_{\mathrm{out}}+C_{\mathrm{out}}
 $$
 
 \begin{examplebox}
-\textbf{例子 1：参数量计算。} 输入通道数 $C_{\mathrm{in}}=3$，卷积核大小 $K=5$，卷积核个数 $C_{\mathrm{out}}=6$。不考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 = 450$；考虑 bias 时，参数量为 $5 \times 5 \times 3 \times 6 + 6 = 456$。
+\textbf{例子 7：参数量计算。} 输入通道数 $C_{\mathrm{in}}=3$，卷积核大小 $K=5$，卷积核个数 $C_{\mathrm{out}}=6$。不考虑偏置时，参数量为 $5 \times 5 \times 3 \times 6 = 450$；考虑偏置时，参数量为 $5 \times 5 \times 3 \times 6 + 6 = 456$。
 \end{examplebox}
 
 \begin{examplebox}
-\textbf{例子 2：padding 保持大小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $1$。
+\textbf{例子 8：padding 保持大小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $1$。
 
 $$
 H_{\mathrm{out}} = \frac{32 + 2 \times 1 - 3}{1} + 1 = 32
@@ -282,7 +308,7 @@ $$
 \end{examplebox}
 
 \begin{examplebox}
-\textbf{例子 3：stride 让尺寸减小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $2$。
+\textbf{例子 9：stride 让尺寸减小。} 输入为 $32 \times 32 \times 3$，使用 $3 \times 3$ 卷积核，卷积核个数为 $16$，padding 为 $1$，stride 为 $2$。
 
 $$
 H_{\mathrm{out}} = \left\lfloor\frac{32 + 2 \times 1 - 3}{2}\right\rfloor + 1 = 16
@@ -301,14 +327,8 @@ $$
 \textbf{池化 Pooling：} 池化是在局部窗口内做汇总操作。最大池化取窗口最大值，保留最强响应；平均池化取窗口平均值，保留整体平均水平。
 \end{definitionbox}
 
-\begin{definitionbox}
-\textbf{全局平均池化 GAP：} GAP 对每个通道的所有空间位置取平均，把每个通道压成一个数；它改变空间尺寸，但不改变通道数。
-\end{definitionbox}
-
-GAP 常用于减少后续全连接层的参数量。例如输入为 $7\times 7\times 512$，GAP 后变成 $1\times 1\times 512$，每个通道只保留一个平均值。
-
 \begin{examplebox}
-\textbf{池化例子：} 对局部区域
+\textbf{例子 10：最大池化和平均池化。} 对局部区域
 
 $$
 \begin{bmatrix}
@@ -321,7 +341,7 @@ $$
 \end{examplebox}
 
 \begin{examplebox}
-\textbf{尺寸例子：} 输入为 $32 \times 32 \times 16$，最大池化窗口为 $2 \times 2$，stride 为 $2$，输出为 $16 \times 16 \times 16$。
+\textbf{例子 11：池化尺寸。} 输入为 $32 \times 32 \times 16$，最大池化窗口为 $2 \times 2$，stride 为 $2$，输出为 $16 \times 16 \times 16$。
 \end{examplebox}
 
 ## CNN 整体结构与层的组合
@@ -344,7 +364,7 @@ p20 给出了一个典型 CNN 结构：
 \end{definitionbox}
 
 \begin{examplebox}
-\textbf{经典 LeNet 结构：} 输入图像 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 展平 $\rightarrow$ 全连接 $\rightarrow$ 输出。
+\textbf{例子 12：经典 LeNet 结构。} 输入图像 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 卷积 $\rightarrow$ 池化 $\rightarrow$ 展平 $\rightarrow$ 全连接 $\rightarrow$ 输出。
 \end{examplebox}
 
 只要前一层输出形状能作为后一层输入，卷积、激活、池化、展平、全连接等层就可以灵活搭配。不同 CNN 的差别主要体现在层数、顺序、卷积核个数和是否下采样。
@@ -353,18 +373,18 @@ p20 给出了一个典型 CNN 结构：
 
 \begin{keybox}
 \begin{itemize}
-\item 图像具有局部关联性和一定不变性；CNN 的设计正是为了利用这些图像特征。p3-p6
+\item 图像具有局部关联性和一定不变性；图像关联性更接近幂级数衰减，近处关联强，远处关联弱但不一定迅速消失。p3-p6
 \item 图像不具有置换不变性；完全打乱像素顺序会破坏空间结构。p6
 \item 两个像素点完全独立时，相关函数或互信息量为 0。p3-p5
 \item 指数衰减下降较快，幂级数衰减下降较慢；幂级数衰减可以看作许多指数衰减成分的叠加。p3-p5
 \item 类视皮层设计启发 CNN：先提取局部简单特征，再逐步整合成复杂信息。p7-p10
-\item 卷积的核心是局部窗口加权求和；卷积核和 bias 都是可训练参数。p11-p13
+\item 卷积的核心是局部窗口加权求和；卷积核和偏置（bias）都是可训练参数。p11-p13
 \item Padding 在边缘补值，用来控制输出空间大小；Same Padding 可保持空间尺寸不变。p14
 \item Stride 是卷积核滑动步长；stride 越大，输出空间尺寸通常越小。p15
 \item 多通道卷积中，一个完整卷积核覆盖所有输入通道；一个卷积核产生一个输出通道。p16
 \item 卷积输出空间尺寸看 $H, W, K, P, S$；输出通道数看卷积核个数 $C_{\mathrm{out}}$。p14-p16
-\item 卷积参数量看 $K, C_{\mathrm{in}}, C_{\mathrm{out}}$；有 bias 时再加 $C_{\mathrm{out}}$，不要乘 $H_{\mathrm{out}}$ 和 $W_{\mathrm{out}}$。p14-p16
-\item 池化汇总局部信息，降低空间尺寸，通常没有可学习参数，也通常不改变通道数；GAP 会把每个通道压成一个数。p18
+\item 卷积参数量看 $K, C_{\mathrm{in}}, C_{\mathrm{out}}$；有偏置（bias）时再加 $C_{\mathrm{out}}$，不要乘 $H_{\mathrm{out}}$ 和 $W_{\mathrm{out}}$。p14-p16
+\item 池化汇总局部信息，降低空间尺寸，通常没有可学习参数，也通常不改变通道数。p18
 \item CNN 没有唯一固定格式；卷积、激活、池化、展平、全连接、softmax 等模块可以灵活组合，但相邻层的输入输出尺寸必须匹配。p20-p22
 \end{itemize}
 \end{keybox}
@@ -379,8 +399,6 @@ p20 给出了一个典型 CNN 结构：
    答案：通道。
 4. 计算：输入为 `32 x 32 x 3`，卷积核为 `3 x 3`，padding=1，stride=1，卷积核个数为 16，输出尺寸是______。  
    答案：`32 x 32 x 16`。
-5. 计算：一个卷积层中 $K=5$，$C_{\mathrm{in}}=3$，$C_{\mathrm{out}}=6$，且每个卷积核有 bias，参数量是______。
+5. 计算：一个卷积层中 $K=5$，$C_{\mathrm{in}}=3$，$C_{\mathrm{out}}=6$，且每个卷积核有偏置（bias），参数量是______。
 
    答案：`5 x 5 x 3 x 6 + 6 = 456`。
-6. 判断：全局平均池化 GAP 会把每个通道压成一个数，通常可以减少后续全连接层参数量。
-   答案：正确。
