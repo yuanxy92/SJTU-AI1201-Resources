@@ -96,6 +96,8 @@ trap cleanup EXIT
 FONT="${CJK_FONT:-Songti SC}"
 MONO_FONT="${MONO_FONT:-Menlo}"
 MARGIN="${PDF_MARGIN:-0.85in}"
+PDF_TOC="${PDF_TOC:-1}"
+PDF_NUMBER_SECTIONS="${PDF_NUMBER_SECTIONS:-1}"
 
 echo "Exporting:"
 echo "  Input : $INPUT"
@@ -105,22 +107,31 @@ fi
 echo "  Output: $OUTPUT"
 echo "  Font  : $FONT"
 
-pandoc "$PANDOC_INPUT" \
-  --from markdown+smart \
-  --to pdf \
-  --output "$OUTPUT" \
-  --pdf-engine=xelatex \
-  --resource-path="$ROOT_DIR:$ROOT_DIR/output:$ROOT_DIR/output/chapters" \
-  --toc \
-  --toc-depth=2 \
-  --number-sections \
-  -V documentclass=article \
-  -V CJKmainfont="$FONT" \
-  -V mainfont="Times New Roman" \
-  -V monofont="$MONO_FONT" \
-  -V geometry:margin="$MARGIN" \
-  -V colorlinks=true \
-  -V linkcolor=blue \
+PANDOC_ARGS=(
+  "$PANDOC_INPUT"
+  --from markdown+smart
+  --to pdf
+  --output "$OUTPUT"
+  --pdf-engine=xelatex
+  --resource-path="$ROOT_DIR:$ROOT_DIR/output:$ROOT_DIR/output/chapters"
+  -V documentclass=article
+  -V CJKmainfont="$FONT"
+  -V mainfont="Times New Roman"
+  -V monofont="$MONO_FONT"
+  -V geometry:margin="$MARGIN"
+  -V colorlinks=true
+  -V linkcolor=blue
   -V urlcolor=blue
+)
+
+if [[ "$PDF_TOC" != "0" ]]; then
+  PANDOC_ARGS+=(--toc --toc-depth=2)
+fi
+
+if [[ "$PDF_NUMBER_SECTIONS" != "0" ]]; then
+  PANDOC_ARGS+=(--number-sections)
+fi
+
+pandoc "${PANDOC_ARGS[@]}"
 
 echo "Done: $OUTPUT"
