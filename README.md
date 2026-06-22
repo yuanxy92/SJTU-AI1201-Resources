@@ -1,70 +1,83 @@
 # SJTU-AI1201-Resources
 
-This repository contains final review materials for the SJTU AI1201 course.
+这是上海交通大学 `AI1201 人工智能基础 A` 的期末复习资料仓库，主要面向正在准备这门课期末考试的大一同学。
 
-The materials are prepared for an introductory artificial intelligence course and are mainly intended to help students review before the final exam. The current focus is on concept-oriented review notes, simple formula checks, and selected figures used in the review handout.
+资料的目标不是替代课堂和课件，而是帮助大家在考前把核心概念、常考公式、容易混淆的网络结构和需要记忆的结论重新梳理一遍。
 
-## Contents
+整理者：袁肖赟，上海交通大学计算机学院，yuanxiaoyun@sjtu.edu.cn
 
-```text
-output/
-  期末复习课详细提纲.md        # Main detailed review outline
-  期末复习课详细提纲.pdf       # Exported PDF version for distribution
-  期末复习课短版.md            # Compact last-minute review version
-  期末复习课短版.pdf           # Exported compact PDF
-  期末考试复习要点.md          # Earlier/high-level review notes
-  复习提纲整理工作流程.md      # Workflow for organizing later chapters
-  assets/                     # Figures extracted or prepared for the handout
-scripts/
-  export_md_pdf.sh            # Markdown-to-PDF export script
-```
+## 建议先看
 
-## Review Scope
+最推荐直接下载 PDF 阅读：
 
-The review materials are organized around the final exam scope:
+| 文件 | 适合什么时候看 | 说明 |
+| --- | --- | --- |
+| [`output/期末复习课详细提纲.pdf`](output/期末复习课详细提纲.pdf) | 正常复习、跟课复习 | 最完整版本，按章节覆盖主要考点、公式、例子和关键记忆。 |
+| [`output/期末复习课短版.pdf`](output/期末复习课短版.pdf) | 考前几天快速过一遍 | 压缩版，适合快速回忆重点，但不建议只看短版。 |
+| [`output/五大网络对比.pdf`](output/五大网络对比.pdf) | 复习 CNN、RNN、LSTM、Transformer 时 | 对比 MLP、CNN、RNN、LSTM、Transformer 的数据类型、核心机制、公式和易错点。 |
 
-- Residual network basics
-- Convolutional neural networks
-- Recurrent neural networks and LSTM
+如果时间比较紧，建议顺序是：
+
+1. 先看 `五大网络对比.pdf`，建立整体框架。
+2. 再看 `期末复习课短版.pdf`，快速扫一遍全部章节。
+3. 对不熟的章节回到 `期末复习课详细提纲.pdf` 查公式、定义和例子。
+
+## 复习范围
+
+当前资料主要覆盖以下内容：
+
+- 基础知识：张量、参数、偏置、激活函数、softmax、交叉熵
+- 残差网络基础
+- 卷积神经网络 CNN
+- 循环神经网络 RNN 与 LSTM
 - Transformer
-- Neural network training phenomena
-- Parameter condensation and flatness of solutions
-- Large model basics
-- Reinforcement learning
+- 神经网络训练现象：频率原则
+- 参数凝聚与解的平坦性
+- 大模型基础
+- 强化学习基础
+- 全部记忆点
 
-The notes are written for lower-division undergraduate students, so the emphasis is on:
+这份资料更偏概念复习和简单计算，不追求复杂推导。考试中如果涉及计算，通常也会集中在比较基础的公式识别、维度判断和参数量计算。
 
-- Definitions and core concepts
-- Conceptual distinctions
-- Simple formula recognition
-- Basic CNN size and parameter calculations
-- Short thinking questions for classroom review
+## 怎么使用
 
-## PDF Export
+建议复习时重点关注三类内容：
 
-The main handout is maintained in Markdown:
+- 蓝色框：本节最核心的概念和结论。
+- 绿色框：帮助理解的例子，尤其是卷积尺寸、参数量、softmax、交叉熵、RNN 和注意力机制。
+- 红色框：需要集中记忆的关键点。
+
+对闭卷考试来说，最后可以重点检查：
+
+- 公式是否知道什么时候用。
+- 公式里的变量是否知道代表什么。
+- 判断题常见坑是否能识别。
+- 类似概念是否能区分，例如 MLP vs CNN、RNN vs LSTM、LSTM vs Transformer。
+
+## Markdown 源文件
+
+PDF 对应的 Markdown 源文件也保留在仓库中，方便后续修改：
 
 ```text
 output/期末复习课详细提纲.md
+output/期末复习课短版.md
+output/五大网络对比.md
 ```
 
-The exported PDFs are:
+详细版的章节拆分文件在：
 
 ```text
-output/期末复习课详细提纲.pdf
-output/期末复习课短版.pdf
+output/chapters/
 ```
 
-In the local working directory, the export script is:
+图片资源在：
 
-```bash
-scripts/export_md_pdf.sh
+```text
+output/assets/
 ```
 
-The script requires `pandoc` and `xelatex`.
+## 说明
 
-## Notes
-
-- Original course slide PDFs are not tracked in this repository.
-- Extracted figures used in the handout are tracked under `output/assets/`.
-- This repository is intended for course review material management and iterative editing.
+- 原始课程课件 PDF 不放在这个仓库中。
+- 仓库中只保留整理后的复习材料、导出的 PDF 和复习资料中实际使用的图片资源。
+- 这些材料用于帮助复习，最终考试范围和要求以课程组发布的信息为准。
